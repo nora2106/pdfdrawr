@@ -4,13 +4,13 @@ plugins {
 }
 
 android {
-    namespace = "com.example.pdfdrawr"
+    namespace = "dev.nora.pdfdrawr"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "com.example.pdfdrawr"
+        applicationId = "dev.nora.pdfdrawr"
         minSdk = 24
         targetSdk = 37
         versionCode = 1

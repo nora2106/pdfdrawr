@@ -1,4 +1,4 @@
-package com.example.pdfdrawr.ui.theme
+package dev.nora.pdfdrawr.ui.theme
 
 import android.app.Activity
 import android.os.Build

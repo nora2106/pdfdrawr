@@ -1,4 +1,4 @@
-package com.example.pdfdrawr.ui.theme
+package dev.nora.pdfdrawr.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
