@@ -9,18 +9,35 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import org.xml.sax.InputSource
 import org.xmlpull.v1.XmlPullParser
-import java.io.InputStream
-import java.io.StringReader
-
 
 object WebDavSyncService {
     private val ns: String? = null
-    // Ausführung im Hintergrund (auf Dispatchers.IO Thread)
-    suspend fun testWebdav() = withContext(Dispatchers.IO) {
-        val url = "https://nx95183.your-storageshare.de/remote.php/dav/files/n0ra/test";
-        val credential = Credentials.basic("n0ra", "xxx");
+
+    // try to connect to nextcloud instance
+    suspend fun testWebdavConnection(url: String, username: String, password: String): Boolean = withContext(Dispatchers.IO) {
+        val credential = Credentials.basic(username, password);
+        val client = OkHttpClient()
+        val request = Request.Builder()
+            .url(url)
+            .header("Authorization", credential)
+            .build()
+
+        try {
+            client.newCall(request).execute().use { res ->
+                Log.d("DebugLog", "Status: ${res.code}")
+                res.code == 200 || res.code == 207
+            }
+        } catch (e: Exception) {
+            Log.d("DebugLog", "Verbindung fehlgeschlagen: $e")
+            false
+        }
+
+    }
+
+    suspend fun getWebdavFolder() = withContext(Dispatchers.IO) {
+        val url = "";
+        val credential = Credentials.basic("n0ra", "xx");
 
         val xmlBody = """<?xml version="1.0" encoding="UTF-8"?>
             <d:propfind xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns" xmlns:nc="http://nextcloud.org/ns">
@@ -45,7 +62,6 @@ object WebDavSyncService {
             .build()
 
         client.newCall(request).execute().use { res ->
-            Log.d("DebugLog", res.code.toString())
             res.body.byteStream().use { inputStream ->
                 val parser: XmlPullParser = Xml.newPullParser()
                 parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false)
@@ -67,7 +83,6 @@ object WebDavSyncService {
             if (parser.eventType != XmlPullParser.START_TAG) {
                 continue
             }
-            // Starts by looking for the entry tag.
             if (parser.name == "d:response") {
                 entries.add(readEntry(parser))
             } else {
