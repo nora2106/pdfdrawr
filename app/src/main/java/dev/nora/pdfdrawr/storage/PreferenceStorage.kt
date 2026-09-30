@@ -6,6 +6,8 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 object PreferenceStorage {
@@ -24,6 +26,18 @@ object PreferenceStorage {
         }
     }
 
+    suspend fun getStoredNextcloudCredentials(context: Context): LoginCredentials? {
+        val url = getNextcloudUrl(context).first()
+        val username = getNextcloudUsername(context).first()
+        val password = getNextcloudPassword(context).first()
+
+        if (url.isNullOrBlank() || username.isNullOrBlank() || password.isNullOrBlank()) {
+            return null
+        }
+
+        return LoginCredentials(url, username, password)
+    }
+
     fun getNextcloudUsername(context: Context): Flow<String?> {
         return context.dataStore.data.map { preferences -> preferences[usernameData] ?: "" }
     }
@@ -40,4 +54,10 @@ object PreferenceStorage {
         // TODO add encryption
         return password
     }
+
+    data class LoginCredentials(
+        val url: String,
+        val username: String,
+        val password: String
+    )
 }
