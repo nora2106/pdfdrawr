@@ -19,7 +19,8 @@ object FolderSyncManager {
     // TODO specify folder path via parameters
     suspend fun syncFolder(context: Context): List<WebDavFile> = withContext(Dispatchers.IO) {
         val fileList: MutableList<WebDavFile> = mutableListOf()
-        val storedCredentials = getStoredNextcloudCredentials(context) ?: return@withContext fileList
+        val storedCredentials =
+            getStoredNextcloudCredentials(context) ?: return@withContext fileList
         val url = storedCredentials.url
         val credential = Credentials.basic(storedCredentials.username, storedCredentials.password)
 
@@ -51,8 +52,7 @@ object FolderSyncManager {
                 parser.setInput(inputStream, null)   // null = Encoding automatisch erkennen
                 parser.nextTag()
                 val entries = readFeed(parser)
-                for(entry in entries) {
-                    Log.d("DebugLog", entry.toString())
+                for (entry in entries) {
                     fileList.add(entry)
                 }
             }
@@ -89,9 +89,13 @@ object FolderSyncManager {
             }
             when (parser.name) {
                 "d:href" -> path = readPath(parser)
-                "d:getlastmodified" -> lastModified = readLastModified(parser)
-                "d:resourceType" -> isDirectory = readResourceType(parser)
-                "d:getcontenttype" -> fileType = readContentType(parser)
+                "d:propstat" -> {
+                    val props = readPropStat(parser)
+                    lastModified = props.lastModified
+                    isDirectory = props.isDirectory
+                    fileType = props.fileType
+                }
+
                 else -> skip(parser)
             }
         }
@@ -105,11 +109,33 @@ object FolderSyncManager {
         return path
     }
 
-    private fun readLastModified(parser: XmlPullParser): String  {
-        parser.require(XmlPullParser.START_TAG, ns, "d:getlastmodified")
-        val lastModified = readText(parser)
-        parser.require(XmlPullParser.END_TAG, ns, "d:getlastmodified")
-        return lastModified
+    private fun readPropStat(parser: XmlPullParser): PropStatResult {
+        parser.require(XmlPullParser.START_TAG, ns, "d:propstat")
+        var lastModified: String? = null
+        var isDirectory = false
+        var contentType: String? = null
+
+        while (parser.next() != XmlPullParser.END_TAG) {
+            if (parser.eventType != XmlPullParser.START_TAG) {
+                continue
+            }
+            if (parser.name == "d:prop") {
+                while (parser.next() != XmlPullParser.END_TAG) {
+                    if (parser.eventType != XmlPullParser.START_TAG) {
+                        continue
+                    }
+                    when (parser.name) {
+                        "d:getlastmodified" -> lastModified = readLastModified(parser)
+                        "d:resourcetype" -> isDirectory = readResourceType(parser)
+                        "d:getcontenttype" -> contentType = readContentType(parser)
+                        else -> skip(parser)
+                    }
+                }
+            } else {
+                skip(parser)
+            }
+        }
+        return PropStatResult(lastModified, isDirectory, contentType)
     }
 
     private fun readResourceType(parser: XmlPullParser): Boolean {
@@ -125,11 +151,18 @@ object FolderSyncManager {
         return isCollection
     }
 
-    private fun readContentType(parser: XmlPullParser): String  {
+    private fun readContentType(parser: XmlPullParser): String {
         parser.require(XmlPullParser.START_TAG, ns, "d:getcontenttype")
         val type = readText(parser)
         parser.require(XmlPullParser.END_TAG, ns, "d:getcontenttype")
         return type
+    }
+
+    private fun readLastModified(parser: XmlPullParser): String {
+        parser.require(XmlPullParser.START_TAG, ns, "d:getlastmodified")
+        val result = readText(parser)
+        parser.require(XmlPullParser.END_TAG, ns, "d:getlastmodified")
+        return result
     }
 
     private fun readText(parser: XmlPullParser): String {
@@ -157,6 +190,12 @@ object FolderSyncManager {
 
 data class WebDavFile(
     val path: String?,
+    val lastModified: String?,
+    val isDirectory: Boolean,
+    val fileType: String?
+)
+
+private data class PropStatResult(
     val lastModified: String?,
     val isDirectory: Boolean,
     val fileType: String?

@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -60,7 +61,12 @@ fun FolderView() {
         modifier = Modifier.fillMaxWidth()
     ) {
         for (file in files) {
-            Text(file.path ?: "Unbekannt")
+            Column(
+            ) {
+                Text(file.path ?: "Unbekannt")
+                Text(file.lastModified ?: "")
+                Text(file.fileType ?: "Folder")
+            }
         }
     }
 }
