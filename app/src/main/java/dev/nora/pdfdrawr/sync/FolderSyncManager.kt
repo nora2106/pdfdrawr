@@ -16,7 +16,7 @@ import org.xmlpull.v1.XmlPullParser
 object FolderSyncManager {
     private val ns: String? = null
 
-    // TODO specify folder via parameters
+    // TODO specify folder path via parameters
     suspend fun syncFolder(context: Context): List<WebDavFile> = withContext(Dispatchers.IO) {
         val fileList: MutableList<WebDavFile> = mutableListOf()
         val storedCredentials = getStoredNextcloudCredentials(context) ?: return@withContext fileList
@@ -29,7 +29,6 @@ object FolderSyncManager {
                     <d:getlastmodified/>
                     <d:getcontentlength/>
                     <d:getcontenttype/>
-                    <oc:permissions/>
                     <d:resourcetype/>
                     <d:getetag/>
                 </d:prop>
@@ -53,6 +52,7 @@ object FolderSyncManager {
                 parser.nextTag()
                 val entries = readFeed(parser)
                 for(entry in entries) {
+                    Log.d("DebugLog", entry.toString())
                     fileList.add(entry)
                 }
             }
@@ -81,6 +81,8 @@ object FolderSyncManager {
         parser.require(XmlPullParser.START_TAG, ns, "d:response")
         var path: String? = null
         var lastModified: String? = null
+        var isDirectory = false
+        var fileType: String? = null;
         while (parser.next() != XmlPullParser.END_TAG) {
             if (parser.eventType != XmlPullParser.START_TAG) {
                 continue
@@ -88,24 +90,46 @@ object FolderSyncManager {
             when (parser.name) {
                 "d:href" -> path = readPath(parser)
                 "d:getlastmodified" -> lastModified = readLastModified(parser)
+                "d:resourceType" -> isDirectory = readResourceType(parser)
+                "d:getcontenttype" -> fileType = readContentType(parser)
                 else -> skip(parser)
             }
         }
-        return WebDavFile(path, lastModified)
+        return WebDavFile(path, lastModified, isDirectory, fileType)
     }
 
     private fun readPath(parser: XmlPullParser): String {
         parser.require(XmlPullParser.START_TAG, ns, "d:href")
-        val summary = readText(parser)
+        val path = readText(parser)
         parser.require(XmlPullParser.END_TAG, ns, "d:href")
-        return summary
+        return path
     }
 
     private fun readLastModified(parser: XmlPullParser): String  {
         parser.require(XmlPullParser.START_TAG, ns, "d:getlastmodified")
-        val summary = readText(parser)
+        val lastModified = readText(parser)
         parser.require(XmlPullParser.END_TAG, ns, "d:getlastmodified")
-        return summary
+        return lastModified
+    }
+
+    private fun readResourceType(parser: XmlPullParser): Boolean {
+        parser.require(XmlPullParser.START_TAG, null, "d:resourcetype")
+        var isCollection = false
+
+        while (parser.next() != XmlPullParser.END_TAG) {
+            if (parser.eventType == XmlPullParser.START_TAG && parser.name == "d:collection") {
+                isCollection = true
+                parser.next()
+            }
+        }
+        return isCollection
+    }
+
+    private fun readContentType(parser: XmlPullParser): String  {
+        parser.require(XmlPullParser.START_TAG, ns, "d:getcontenttype")
+        val type = readText(parser)
+        parser.require(XmlPullParser.END_TAG, ns, "d:getcontenttype")
+        return type
     }
 
     private fun readText(parser: XmlPullParser): String {
@@ -133,5 +157,7 @@ object FolderSyncManager {
 
 data class WebDavFile(
     val path: String?,
-    val lastModified: String?
+    val lastModified: String?,
+    val isDirectory: Boolean,
+    val fileType: String?
 )
