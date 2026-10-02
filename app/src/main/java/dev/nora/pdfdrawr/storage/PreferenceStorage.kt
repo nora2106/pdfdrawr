@@ -30,22 +30,22 @@ object PreferenceStorage {
         val username = getNextcloudUsername(context).first()
         val password = getNextcloudPassword(context).first()
 
-        if (url.isNullOrBlank() || username.isNullOrBlank() || password.isNullOrBlank()) {
+        if (url.isBlank() || username.isBlank() || password.isBlank()) {
             return null
         }
 
         return LoginCredentials(url, username, password)
     }
 
-    fun getNextcloudUsername(context: Context): Flow<String?> {
+    fun getNextcloudUsername(context: Context): Flow<String> {
         return context.dataStore.data.map { preferences -> preferences[usernameData] ?: "" }
     }
 
-    fun getNextcloudUrl(context: Context): Flow<String?> {
+    fun getNextcloudUrl(context: Context): Flow<String> {
         return context.dataStore.data.map { preferences -> preferences[urlData] ?: "" }
     }
 
-    fun getNextcloudPassword(context: Context): Flow<String?> {
+    fun getNextcloudPassword(context: Context): Flow<String> {
         return context.dataStore.data.map { preferences -> preferences[passwordData] ?: "" }
     }
 

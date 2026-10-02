@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId = "dev.nora.pdfdrawr"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
@@ -47,6 +47,7 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:5.5.0")
     implementation(libs.androidx.material3)
     implementation("androidx.datastore:datastore-preferences:1.2.1")
+    implementation("androidx.compose.material:material-icons-extended:<version>")
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
