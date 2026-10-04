@@ -1,15 +1,15 @@
 package dev.nora.pdfdrawr.sync
 
 import android.util.Log
-import android.util.Xml
+import dev.nora.pdfdrawr.storage.PreferenceStorage.getStoredNextcloudCredentials
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.Credentials
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import org.xmlpull.v1.XmlPullParser
+import java.io.File
+import android.content.Context
+import okio.IOException
 
 object WebDavSyncService {
     // try to connect to nextcloud instance
@@ -23,7 +23,6 @@ object WebDavSyncService {
 
             try {
                 client.newCall(request).execute().use { res ->
-                    Log.d("DebugLog", "Status: ${res.code}")
                     res.code == 200 || res.code == 207
                 }
             } catch (e: Exception) {
@@ -32,4 +31,27 @@ object WebDavSyncService {
             }
 
         }
+
+    suspend fun downloadFile(context: Context, fileName: String, path: String?): File {
+        val storedCredentials = getStoredNextcloudCredentials(context) ?: throw IllegalStateException("Keine Zugangsdaten")
+        val url = storedCredentials.url
+
+        val client = OkHttpClient()
+        val request = Request.Builder()
+            .url(url + path)
+            .header("Authorization", Credentials.basic(storedCredentials.username, storedCredentials.password))
+            .build()
+
+        val file = File(context.filesDir, fileName)
+
+        client.newCall(request).execute().use { res ->
+            if(!res.isSuccessful) throw IOException("Download fehlgeschlagen: ${res.code}")
+            res.body.byteStream().use { input ->
+                file.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+        }
+        return file
+    }
 }

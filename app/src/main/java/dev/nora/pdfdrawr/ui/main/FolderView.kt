@@ -76,7 +76,6 @@ fun FolderView() {
     }
 }
 
-
 @Composable
 fun FileElement(file: WebDavFile) {
     FlowRow(

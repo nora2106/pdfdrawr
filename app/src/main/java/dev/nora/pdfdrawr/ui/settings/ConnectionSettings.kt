@@ -1,5 +1,7 @@
 package dev.nora.pdfdrawr.ui.settings
 
+import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Button
@@ -15,15 +17,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.content.FileProvider
+import dev.nora.pdfdrawr.PDFViewer
+import dev.nora.pdfdrawr.helpers.getFileFromAssets
 import dev.nora.pdfdrawr.storage.PreferenceStorage.storeLoginData
 import dev.nora.pdfdrawr.sync.WebDavSyncService.testWebdavConnection
 import dev.nora.pdfdrawr.ui.theme.PDFDrawrTheme
 import kotlinx.coroutines.launch
+import java.io.File
 
 @Composable
 fun LoginScreen() {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val pdfFile = File(context.cacheDir, "test.pdf")
+    val uri = FileProvider.getUriForFile(context,  "${context.packageName}.fileprovider", pdfFile)
+    Log.d("DebugLog", "Datei existiert: ${pdfFile.exists()}, Größe: ${pdfFile.length()}, Pfad: ${pdfFile.absolutePath}")
+    PDFViewer().startMuPDFActivity(context, uri)
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,

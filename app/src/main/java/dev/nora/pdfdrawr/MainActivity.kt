@@ -1,6 +1,7 @@
 package dev.nora.pdfdrawr
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -9,7 +10,6 @@ import androidx.compose.ui.Modifier
 import dev.nora.pdfdrawr.ui.theme.PDFDrawrTheme
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.ui.Alignment
-import dev.nora.pdfdrawr.ui.main.FolderView
 import dev.nora.pdfdrawr.ui.settings.LoginScreen
 
 class MainActivity : ComponentActivity() {
@@ -23,7 +23,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     LoginScreen()
-                    FolderView()
+                    //FolderView()
                 }
             }
         }
