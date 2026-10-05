@@ -29,10 +29,11 @@ object WebDavSyncService {
                 Log.d("DebugLog", "Verbindung fehlgeschlagen: $e")
                 false
             }
-
         }
 
-    suspend fun downloadFile(context: Context, fileName: String, path: String?): File {
+    suspend fun downloadFile(context: Context, fileName: String?, path: String?): File = withContext(Dispatchers.IO){
+        if(fileName == null) throw IllegalArgumentException("File hat keinen Namen")
+
         val storedCredentials = getStoredNextcloudCredentials(context) ?: throw IllegalStateException("Keine Zugangsdaten")
         val url = storedCredentials.url
 
@@ -52,6 +53,6 @@ object WebDavSyncService {
                 }
             }
         }
-        return file
+        return@withContext file
     }
 }

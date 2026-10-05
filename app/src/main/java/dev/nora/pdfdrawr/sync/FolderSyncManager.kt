@@ -2,7 +2,6 @@ package dev.nora.pdfdrawr.sync
 
 import android.content.Context
 import android.net.Uri
-import android.os.Debug
 import android.util.Log
 import android.util.Xml
 import androidx.core.content.FileProvider
@@ -16,7 +15,6 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.xmlpull.v1.XmlPullParser
 import java.io.File
-import java.net.URI
 
 object FolderSyncManager {
     private val ns: String? = null
@@ -70,9 +68,8 @@ object FolderSyncManager {
         return@withContext fileList
     }
 
-    suspend fun getFileUri(context: Context, fileName: String, path: String?): Uri? {
-        val file = WebDavSyncService.downloadFile(context, fileName, path)
-        return FileProvider.getUriForFile(context,  "${context.packageName}.fileprovider", file)
+    suspend fun getFile(context: Context, fileName: String?, path: String?): File {
+        return WebDavSyncService.downloadFile(context, fileName, path)
     }
 
     fun getFileFromAssets(context: Context, fileName: String): File {

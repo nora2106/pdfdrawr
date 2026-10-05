@@ -48,6 +48,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation("androidx.datastore:datastore-preferences:1.2.1")
     implementation("androidx.compose.material:material-icons-extended:<version>")
+    implementation("com.tom-roush:pdfbox-android:2.0.27.0")
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
@@ -55,5 +56,4 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
-    api("com.artifex.mupdf:viewer:1.15.+")
 }
