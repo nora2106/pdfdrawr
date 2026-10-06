@@ -50,6 +50,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended:<version>")
     implementation("com.tom-roush:pdfbox-android:2.0.27.0")
     testImplementation(libs.junit)
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:<version>")
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)

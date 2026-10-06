@@ -14,7 +14,7 @@ import okio.IOException
 object WebDavSyncService {
     // try to connect to nextcloud instance
     suspend fun testWebdavConnection(url: String, username: String, password: String): Boolean = withContext(Dispatchers.IO) {
-            val credential = Credentials.basic(username, password);
+            val credential = Credentials.basic(username, password)
             val client = OkHttpClient()
             val request = Request.Builder()
                 .url(url)

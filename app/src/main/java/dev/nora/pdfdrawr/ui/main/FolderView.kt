@@ -1,13 +1,12 @@
 package dev.nora.pdfdrawr.ui.main
 
-import android.graphics.Bitmap
-import android.util.Log
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,14 +29,13 @@ import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.PictureAsPdf
 import androidx.compose.material3.Button
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.nora.pdfdrawr.helpers.convertFileSize
 import dev.nora.pdfdrawr.helpers.trimModifiedDate
-import dev.nora.pdfdrawr.pdf.PDFViewer
 import dev.nora.pdfdrawr.storage.PreferenceStorage.getNextcloudUsername
 import dev.nora.pdfdrawr.sync.FolderSyncManager
+import dev.nora.pdfdrawr.ui.fileview.PdfPage
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -49,7 +47,6 @@ fun FolderView() {
     var selectedPath by remember(username) { mutableStateOf<String?>(null) }
     var previousPath by remember{mutableStateOf<String?>(null)}
     var openedFile by remember { mutableStateOf<File?>(null) }
-    val scope = rememberCoroutineScope()
 
     var files by remember { mutableStateOf<List<WebDavFile>>(emptyList()) }
 
@@ -65,12 +62,16 @@ fun FolderView() {
     }
 
     if(openedFile != null) {
-        Button(
-            onClick = { openedFile = null }
-        ) {
-            Icon(Icons.Rounded.Close, contentDescription = "Close")
+        Column(modifier = Modifier.fillMaxSize()) {
+            Button(
+                onClick = { openedFile = null }
+            ) {
+                Icon(Icons.Rounded.Close, contentDescription = "Close")
+            }
+            Box(modifier = Modifier.weight(1f)) {
+                PdfPage(pdfFile = openedFile!!)
+            }
         }
-        PdfPagePreview(pdfFile = openedFile!!)
     }
     else {
         Button(
@@ -148,26 +149,10 @@ fun FolderElement(file: WebDavFile,  onFolderClick: (String) -> Unit) {
         ) {
         Icon(Icons.Rounded.Folder, contentDescription = "Folder")
 
-        Column(
-        ) {
+        Column() {
             file.name?.let { Text(it) }
             Text(trimModifiedDate(file.lastModified))
         }
-    }
-}
-
-@Composable
-fun PdfPagePreview(pdfFile: File) {
-    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
-    LaunchedEffect(pdfFile) {
-        bitmap = PDFViewer().renderPDF(pdfFile)
-    }
-    bitmap?.let {
-        Image(
-            bitmap = it.asImageBitmap(),
-            contentDescription = "PDF Seite",
-            modifier = Modifier.fillMaxWidth()
-        )
     }
 }
 

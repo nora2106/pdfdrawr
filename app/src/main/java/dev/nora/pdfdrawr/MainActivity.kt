@@ -1,22 +1,26 @@
 package dev.nora.pdfdrawr
 
-import android.graphics.Bitmap
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.ui.Modifier
 import dev.nora.pdfdrawr.ui.theme.PDFDrawrTheme
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ArrowBackIosNew
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.res.painterResource
+import dev.nora.pdfdrawr.ui.fileview.DrawingCanvas
 import dev.nora.pdfdrawr.ui.main.FolderView
 import dev.nora.pdfdrawr.ui.settings.LoginScreen
 
@@ -26,22 +30,34 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             PDFDrawrTheme {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    LoginScreen()
-                    FolderView()
-                }
+                Content()
             }
         }
     }
 }
 
 @Composable
-fun BitmapImage(bitmap: Bitmap) {
-    Image(
-        bitmap = bitmap.asImageBitmap(),
-        contentDescription = "some useful description",
-    )
+fun Content() {
+    var showSettings by remember{mutableStateOf(false)}
+
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        if(showSettings) {
+            Button(
+                onClick = { showSettings = false }
+            ) {
+                Icon(Icons.Rounded.Close, contentDescription = "Close Settings")
+            }
+            LoginScreen()
+        }
+        else {
+            Button(
+                onClick = { showSettings = true }
+            ) {
+                Icon(Icons.Rounded.Settings, contentDescription = "Open Settings")
+            }
+            FolderView()
+        }
+    }
 }
