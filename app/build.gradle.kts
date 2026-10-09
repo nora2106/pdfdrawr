@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.5.0-Beta1"
 }
 
 android {
@@ -49,6 +50,8 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.2.1")
     implementation("androidx.compose.material:material-icons-extended:<version>")
     implementation("com.tom-roush:pdfbox-android:2.0.27.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+    implementation("tools.jackson.module:jackson-module-kotlin:3.2.+")
     testImplementation(libs.junit)
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:<version>")
     androidTestImplementation(platform(libs.androidx.compose.bom))
