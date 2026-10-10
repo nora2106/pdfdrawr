@@ -15,6 +15,14 @@ object PreferenceStorage {
     val passwordData = stringPreferencesKey("nextcloud_password")
     val urlData = stringPreferencesKey("nextcloud_url")
 
+    /**
+     * Store login data in DataStore
+     *
+     * @param context The Context
+     * @param url URL String
+     * @param username Username String
+     * @param password Password String
+     */
     suspend fun storeLoginData(context: Context, url: String, username: String, password: String) {
         context.dataStore.updateData {
             it.toMutablePreferences().also { preferences ->

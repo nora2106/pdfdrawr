@@ -1,15 +1,15 @@
 package dev.nora.pdfdrawr.helpers
 
-import android.content.Context
-import android.util.Log
-import java.io.File
-import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-// takes size in bytes and returns appropiate conversion depending on size
+/**
+ * Take size in bytes and return appropriate conversion depending on size
+ *
+ * @param sizeString Size as String
+ * @return Converted String
+ */
 fun convertFileSize(sizeString: String?): String {
     if (sizeString == null) return ""
 
@@ -41,6 +41,12 @@ fun convertFileSize(sizeString: String?): String {
     return s
 }
 
+/**
+ * Format date string to "dd.MM.yyyy, HH:mm" (German Locale).
+ *
+ * @param dateString Date as String
+ * @return Formatted String
+ */
 fun trimModifiedDate(dateString: String?): String {
     if(dateString == null) return ""
     val parsedDate: ZonedDateTime = ZonedDateTime.parse(

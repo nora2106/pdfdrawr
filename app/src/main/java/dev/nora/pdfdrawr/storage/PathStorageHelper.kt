@@ -7,14 +7,10 @@ import androidx.compose.ui.graphics.PathSegment
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
 import tools.jackson.core.JacksonException
 import tools.jackson.core.type.TypeReference
 import tools.jackson.module.kotlin.jacksonObjectMapper
-import tools.jackson.module.kotlin.readValue
 import java.io.File
-import java.io.FileOutputStream
 import java.io.IOException
 
 
@@ -42,6 +38,11 @@ data class SaveablePath(val fillType: String = "NonZero", val ops: List<PathOp> 
     }
 }
 
+/**
+ * Extract path operations from a path object.
+ *
+ * @param path The path object.
+ */
 fun extractPathOps(path: Path): List<PathOp> {
     val ops = mutableListOf<PathOp>()
     val iterator = path.iterator()  // from androidx.graphics:graphics-path
@@ -55,20 +56,33 @@ fun extractPathOps(path: Path): List<PathOp> {
 }
 val mapper = jacksonObjectMapper()
 
+/**
+ * Save list of paths to JSON file.
+ *
+ * @param paths List of paths.
+ * @param context Global context.
+ * @param pdfName PDF filename.
+ */
 suspend fun saveToJson(paths: List<SaveablePath>, context: Context, pdfName: String) = withContext(Dispatchers.IO) {
-    val path = ""
     val file = File(context.filesDir, "$pdfName.annotations.json")
-    val jsonArray = mapper.writeValueAsString(paths)
 
     try {
-        mapper.writeValue(file, jsonArray)
-        file.writeText(jsonArray)
+        file.writeText(mapper.writeValueAsString(paths))
     } catch (e: IOException) {
         e.printStackTrace()
     }
-
+    catch(e: JacksonException) {
+        e.printStackTrace()
+    }
 }
 
+/**
+ * Find corresponding file and extract path list.
+ *
+ * @param context Global context.
+ * @param pdfName PDF filename.
+ * @return List of serializable paths.
+ */
 suspend fun loadFromJson(context: Context, pdfName: String): List<SaveablePath>? = withContext(Dispatchers.IO) {
     val file = File(context.filesDir, "$pdfName.annotations.json")
     if(!file.exists()) return@withContext null

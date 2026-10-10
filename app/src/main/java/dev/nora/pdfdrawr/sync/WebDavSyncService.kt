@@ -12,7 +12,15 @@ import android.content.Context
 import okio.IOException
 
 object WebDavSyncService {
-    // try to connect to nextcloud instance
+
+    /**
+     * Try to connect to Nextcloud instance
+     *
+     * @param url Server URL
+     * @param username Nextcloud username
+     * @param password Nextcloud password
+     * @return if connection was successful
+     */
     suspend fun testWebdavConnection(url: String, username: String, password: String): Boolean = withContext(Dispatchers.IO) {
             val credential = Credentials.basic(username, password)
             val client = OkHttpClient()
@@ -31,6 +39,14 @@ object WebDavSyncService {
             }
         }
 
+    /**
+     * Download specific file, throw error if it wasn't found
+     *
+     * @param context Context
+     * @param fileName Name of the file
+     * @param path Path to the parent directory
+     * @return the file
+     */
     suspend fun downloadFile(context: Context, fileName: String?, path: String?): File = withContext(Dispatchers.IO){
         if(fileName == null) throw IllegalArgumentException("File hat keinen Namen")
 

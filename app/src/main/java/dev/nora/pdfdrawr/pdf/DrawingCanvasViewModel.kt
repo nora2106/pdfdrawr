@@ -1,6 +1,5 @@
 package dev.nora.pdfdrawr.pdf
 
-import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -73,6 +72,11 @@ class DrawingCanvasViewModel: ViewModel() {
         paths.clear()
     }
 
+    /**
+     * Draw saved paths on canvas.
+     *
+     * @param savedPaths List of paths.
+     */
     fun redraw(savedPaths: List<Path>?) {
         clear()
         Log.d("DebugLog", "redraw")

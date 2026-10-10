@@ -19,6 +19,13 @@ import java.io.File
 object FolderSyncManager {
     private val ns: String? = null
 
+    /**
+     * Get list of files from specified folder.
+     *
+     * @param context Context
+     * @param path Path of the specified folder
+     * @return List of files
+     */
     suspend fun syncFolder(context: Context, path: String?): List<WebDavFile> = withContext(Dispatchers.IO) {
         val fileList: MutableList<WebDavFile> = mutableListOf()
         val storedCredentials =
@@ -68,10 +75,18 @@ object FolderSyncManager {
         return@withContext fileList
     }
 
+    /**
+     * Initiate file download
+     *
+     * @param context Context
+     * @param fileName Name of the file
+     * @param path Path to the parent directory
+     */
     suspend fun getFile(context: Context, fileName: String?, path: String?): File {
         return WebDavSyncService.downloadFile(context, fileName, path)
     }
 
+    // TODO currently unused
     fun getFileFromAssets(context: Context, fileName: String): File {
         val file = File(context.cacheDir, fileName)
 
