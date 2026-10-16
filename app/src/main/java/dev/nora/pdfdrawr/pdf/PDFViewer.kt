@@ -3,11 +3,10 @@ package dev.nora.pdfdrawr.pdf
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.pdf.PdfRenderer
-import android.os.ParcelFileDescriptor
 import androidx.compose.ui.graphics.Path
+import androidx.core.graphics.createBitmap
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import java.io.File
-import androidx.core.graphics.createBitmap
 import dev.nora.pdfdrawr.storage.SaveablePath
 import dev.nora.pdfdrawr.storage.extractPathOps
 import dev.nora.pdfdrawr.storage.loadFromJson
@@ -15,28 +14,23 @@ import dev.nora.pdfdrawr.storage.saveToJson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class PDFViewer {
+class PDFViewer(private val renderer: PdfRenderer) {
 
-    fun loadPDF(context: Context, file: File): PDDocument {
-        return PDDocument.load(file)
-    }
+    fun getPageCount() = renderer.pageCount
 
     /**
-     * Convert first PDF page to bitmap.
+     * Render single PDF page to bitmap.
      *
-     * @param file PDF file
+     * @param pageIndex Index of the page
      * @return Bitmap of the page
      */
-    suspend fun getFirstPage(file: File): Bitmap = withContext(Dispatchers.IO) {
-        val input = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
-        val renderer = PdfRenderer(input)
-        val page = renderer.openPage(0)
+    suspend fun renderSinglePage(pageIndex: Int): Bitmap = withContext(Dispatchers.IO) {
+        val page = renderer.openPage(pageIndex)
         val bitmap = createBitmap(page.width, page.height)
 
         page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
 
         page.close()
-        renderer.close()
         return@withContext bitmap
     }
 
@@ -73,5 +67,14 @@ class PDFViewer {
             restoredPaths.add(p.toPath())
         }
         return@withContext restoredPaths
+    }
+
+    fun close() {
+        renderer.close()
+    }
+
+    // currently unused
+    fun loadPDF(context: Context, file: File): PDDocument {
+        return PDDocument.load(file)
     }
 }

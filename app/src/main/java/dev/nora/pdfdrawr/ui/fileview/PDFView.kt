@@ -1,6 +1,8 @@
 package dev.nora.pdfdrawr.ui.fileview
 
 import android.graphics.Bitmap
+import android.graphics.pdf.PdfRenderer
+import android.os.ParcelFileDescriptor
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,45 +33,88 @@ import dev.nora.pdfdrawr.pdf.DrawingCanvasViewModel
 import dev.nora.pdfdrawr.pdf.PDFViewer
 import java.io.File
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 // TODO currently only works on vertical screens
 @Composable
-fun PdfPage(pdfFile: File) {
+fun PdfView(pdfFile: File) {
     val context = LocalContext.current
-    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
-    val pdfViewer = PDFViewer()
-    val vm: DrawingCanvasViewModel = viewModel()
     val scope = rememberCoroutineScope()
+    var pdfViewer by remember { mutableStateOf<PDFViewer?>(null) }
+    val vm: DrawingCanvasViewModel = viewModel()
 
     LaunchedEffect(pdfFile) {
-        bitmap = pdfViewer.getFirstPage(pdfFile)
+        // create renderer for file
+        val input = ParcelFileDescriptor.open(pdfFile, ParcelFileDescriptor.MODE_READ_ONLY)
+        val renderer = PdfRenderer(input)
+        val viewer = PDFViewer(renderer)
+
+        // clear canvas and save/redraw saved data
         vm.clear()
-        if(pdfViewer.getSavedData(context, pdfFile.name) != null) {
-            vm.redraw(pdfViewer.getSavedData(context, pdfFile.name))
+        val saved = viewer.getSavedData(context, pdfFile.name)
+        if(saved != null) vm.redraw(saved)
+
+        pdfViewer = viewer
+
+        // close renderer after pdfFile has changed
+        try {
+            awaitCancellation()
+        } finally {
+            pdfViewer = null
+
+            withContext(NonCancellable + Dispatchers.IO) {
+                viewer.close()
+            }
         }
     }
     Column() {
         Row() {
             Button(
                 onClick = {
-                    scope.launch { pdfViewer.saveCanvasData(vm.paths, context, pdfFile.name) } }
+                    scope.launch { pdfViewer?.saveCanvasData(vm.paths, context, pdfFile.name) } }
             ) {
                 Text("Save")
             }
         }
-        Box() {
-            bitmap?.let {
-                DrawingCanvas(vm)
-                Image(
-                    bitmap = it.asImageBitmap(),
-                    contentDescription = "PDF Seite",
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .aspectRatio(bitmap!!.width.toFloat() / bitmap!!.height.toFloat()),
-                    contentScale = ContentScale.Fit
-                )
-            }
+
+        pdfViewer?.let{
+            PageColumn(pdfViewer!!)
+        }
+    }
+}
+
+@Composable
+fun PageColumn(pdfViewer: PDFViewer) {
+    LazyColumn(
+    ) {
+        items(count = pdfViewer.getPageCount()) { index -> PdfPage(pdfViewer, index) }
+    }
+}
+
+@Composable
+fun PdfPage(pdfViewer: PDFViewer, index: Int) {
+    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
+
+    LaunchedEffect(index) {
+        bitmap = pdfViewer.renderSinglePage(index)
+    }
+
+    Box() {
+        // TODO add white background (transparent pdfs and placeholder)
+        bitmap?.let {
+            //DrawingCanvas(vm)
+            Image(
+                bitmap = it.asImageBitmap(),
+                contentDescription = "PDF Seite",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .aspectRatio(bitmap!!.width.toFloat() / bitmap!!.height.toFloat()),
+                contentScale = ContentScale.Fit
+            )
         }
     }
 }

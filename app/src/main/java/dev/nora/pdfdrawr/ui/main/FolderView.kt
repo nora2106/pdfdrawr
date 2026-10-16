@@ -36,6 +36,7 @@ import dev.nora.pdfdrawr.helpers.trimModifiedDate
 import dev.nora.pdfdrawr.storage.PreferenceStorage.getNextcloudUsername
 import dev.nora.pdfdrawr.sync.FolderSyncManager
 import dev.nora.pdfdrawr.ui.fileview.PdfPage
+import dev.nora.pdfdrawr.ui.fileview.PdfView
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -69,7 +70,7 @@ fun FolderView() {
                 Icon(Icons.Rounded.Close, contentDescription = "Close")
             }
             Box(modifier = Modifier.weight(1f)) {
-                PdfPage(pdfFile = openedFile!!)
+                PdfView(pdfFile = openedFile!!)
             }
         }
     }

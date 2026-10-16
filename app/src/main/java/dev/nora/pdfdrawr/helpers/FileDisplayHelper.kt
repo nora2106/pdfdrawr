@@ -19,6 +19,7 @@ fun convertFileSize(sizeString: String?): String {
 
     }
     catch (e: Exception) {
+        e.printStackTrace()
         return ""
     }
 
