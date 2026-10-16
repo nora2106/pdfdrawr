@@ -11,13 +11,23 @@ import androidx.lifecycle.ViewModel
 
 class DrawingCanvasViewModel: ViewModel() {
     val paths = mutableStateListOf<Path>()
+    val pathsPerPage = mutableMapOf<Int, List<Path>>()
+    val currentPage = mutableIntStateOf(-1)
     val currentPath = mutableStateOf<Path?>(null)
     val currentPathRef = mutableIntStateOf(1)
     private val lastOffset = mutableStateOf<Offset?>(null)
 
-    fun onTapGesture(offset: Offset) {
-        currentPath.value = Path()
+    /**
+     * Draw single tap.
+     *
+     * @param offset Offset
+     * @param pageIndex Index of current page
+     */
+    fun onTapGesture(offset: Offset, pageIndex: Int, pageWidth: Float) {
+        val p = Offset(offset.x / pageWidth, offset.y / pageWidth)
 
+        currentPath.value = Path()
+        currentPage.intValue = pageIndex
         currentPath.value?.moveTo(offset.x, offset.y)
         currentPath.value?.addRect(
             Rect(
@@ -31,18 +41,26 @@ class DrawingCanvasViewModel: ViewModel() {
         currentPath.value.let { value ->
             if (value != null) {
                 paths.add(value)
+                pathsPerPage[currentPage.intValue] = (pathsPerPage[currentPage.intValue] ?: emptyList()) + value
+                currentPage.intValue = -1
             }
         }
     }
 
-    fun onDragStart(offset: Offset) {
+    fun onDragStart(offset: Offset, page: Int, pageWidth: Float) {
+        val p = Offset(offset.x / pageWidth, offset.y / pageWidth)
+
+        currentPage.intValue = page
         currentPath.value = Path()
         currentPath.value?.moveTo(offset.x, offset.y)
         currentPathRef.intValue += 1
         lastOffset.value = offset
     }
 
-    fun onDrag(offset: Offset) {
+    fun onDrag(offset: Offset, pageWidth: Float) {
+        // TODO
+        val p = Offset(offset.x / pageWidth, offset.y / pageWidth)
+
         if (lastOffset.value != null) {
             val newOffset = Offset(
                 lastOffset.value!!.x + offset.x,
@@ -60,6 +78,7 @@ class DrawingCanvasViewModel: ViewModel() {
                 paths.add(value)
                 currentPath.value = null
                 currentPathRef.intValue = 0
+                pathsPerPage[currentPage.intValue] = (pathsPerPage[currentPage.intValue] ?: emptyList()) + value
             }
         }
     }
@@ -68,8 +87,13 @@ class DrawingCanvasViewModel: ViewModel() {
         currentPath.value = null
     }
 
+    /**
+     * Clear canvas.
+     */
     fun clear() {
         paths.clear()
+        pathsPerPage.clear()
+        currentPath.value = null
     }
 
     /**
@@ -77,9 +101,8 @@ class DrawingCanvasViewModel: ViewModel() {
      *
      * @param savedPaths List of paths.
      */
-    fun redraw(savedPaths: List<Path>?) {
+    fun redraw(savedPaths: Map<Int, List<Path>>?) {
         clear()
-        Log.d("DebugLog", "redraw")
-        savedPaths?.forEach { p -> paths.add(p) }
+        savedPaths?.forEach { (page, paths) -> pathsPerPage[page] = paths }
     }
 }

@@ -21,7 +21,7 @@ data class PathOp (
 )
 
 @Serializable
-data class SaveablePath(val fillType: String = "NonZero", val ops: List<PathOp> = emptyList()) {
+data class SaveablePath(val fillType: String = "NonZero", val ops: List<PathOp> = emptyList(), val page: Int = 0) {
     fun toPath(): Path {
         val p = Path()
         p.fillType = if (fillType == "EvenOdd") PathFillType.EvenOdd else PathFillType.NonZero
@@ -45,7 +45,7 @@ data class SaveablePath(val fillType: String = "NonZero", val ops: List<PathOp> 
  */
 fun extractPathOps(path: Path): List<PathOp> {
     val ops = mutableListOf<PathOp>()
-    val iterator = path.iterator()  // from androidx.graphics:graphics-path
+    val iterator = path.iterator()
     val points = FloatArray(8)
 
     while (iterator.hasNext()) {

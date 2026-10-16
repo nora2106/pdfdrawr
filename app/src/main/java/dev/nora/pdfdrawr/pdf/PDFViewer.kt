@@ -3,6 +3,7 @@ package dev.nora.pdfdrawr.pdf
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.pdf.PdfRenderer
+import android.util.Log
 import androidx.compose.ui.graphics.Path
 import androidx.core.graphics.createBitmap
 import com.tom_roush.pdfbox.pdmodel.PDDocument
@@ -13,9 +14,18 @@ import dev.nora.pdfdrawr.storage.loadFromJson
 import dev.nora.pdfdrawr.storage.saveToJson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlin.collections.component1
+import kotlin.collections.component2
 
 class PDFViewer(private val renderer: PdfRenderer) {
+    private val ratios: List<Float> = List(renderer.pageCount) { i ->
+        val page = renderer.openPage(i)
+        page.use { page ->
+            page.width.toFloat() / page.height
+        }
+    }
 
+    fun ratio(index: Int): Float = ratios[index]
     fun getPageCount() = renderer.pageCount
 
     /**
@@ -37,17 +47,17 @@ class PDFViewer(private val renderer: PdfRenderer) {
     /**
      * Save canvas data as a list of serializable path objects.
      *
-     * @param paths List of paths
+     * @param pathsPerPage Map containing all paths per page
      * @param context Global context
      * @param filename PDF filename
      */
-    suspend fun saveCanvasData(paths: List<Path>, context: Context, filename: String) {
-        val savedPaths = mutableListOf<SaveablePath>()
-
-        paths.forEach { path ->
-            val p = SaveablePath(path.fillType.toString(), extractPathOps(path))
-            savedPaths.add(p)
+    suspend fun saveCanvasData(pathsPerPage: MutableMap<Int, List<Path>>, context: Context, filename: String) {
+        val savedPaths = pathsPerPage.flatMap { (page, paths) ->
+            paths.map { path -> SaveablePath(path.fillType.toString(), extractPathOps(path), page) }
         }
+
+        Log.d("DebugLog", savedPaths.toString())
+
         saveToJson(savedPaths, context, filename)
     }
 
@@ -58,15 +68,16 @@ class PDFViewer(private val renderer: PdfRenderer) {
      * @param filename PDF filename
      * @return list of paths
      */
-    suspend fun getSavedData(context: Context, filename: String): List<Path>?  = withContext(Dispatchers.IO){
+    suspend fun getSavedData(context: Context, filename: String): Map<Int, List<Path>>? = withContext(Dispatchers.IO){
         val savedPaths: List<SaveablePath> = loadFromJson(context, filename) ?: return@withContext null
 
         // deserialize paths into Path objects
-        val restoredPaths = mutableListOf<Path>()
-        savedPaths.forEach { p ->
-            restoredPaths.add(p.toPath())
+        val restoredPathsPerPage = mutableMapOf<Int, List<Path>>()
+        savedPaths.groupBy { it.page }.forEach { (page, list) ->
+            restoredPathsPerPage[page] = list.map { it.toPath() } // deine Rückumwandlung
         }
-        return@withContext restoredPaths
+
+        return@withContext restoredPathsPerPage
     }
 
     fun close() {
