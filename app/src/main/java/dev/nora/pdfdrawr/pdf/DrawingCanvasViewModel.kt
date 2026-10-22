@@ -12,6 +12,7 @@ import androidx.lifecycle.ViewModel
 class DrawingCanvasViewModel: ViewModel() {
     val paths = mutableStateListOf<Path>()
     val pathsPerPage = mutableMapOf<Int, List<Path>>()
+    var canvasWidth = 0f
     val currentPage = mutableIntStateOf(-1)
     val currentPath = mutableStateOf<Path?>(null)
     val currentPathRef = mutableIntStateOf(1)
@@ -49,7 +50,7 @@ class DrawingCanvasViewModel: ViewModel() {
 
     fun onDragStart(offset: Offset, page: Int, pageWidth: Float) {
         val p = Offset(offset.x / pageWidth, offset.y / pageWidth)
-
+        canvasWidth = pageWidth
         currentPage.intValue = page
         currentPath.value = Path()
         currentPath.value?.moveTo(offset.x, offset.y)

@@ -3,6 +3,7 @@ package dev.nora.pdfdrawr.pdf
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.pdf.PdfRenderer
+import android.icu.number.IntegerWidth
 import android.util.Log
 import androidx.compose.ui.graphics.Path
 import androidx.core.graphics.createBitmap
@@ -12,6 +13,7 @@ import dev.nora.pdfdrawr.storage.SaveablePath
 import dev.nora.pdfdrawr.storage.extractPathOps
 import dev.nora.pdfdrawr.storage.loadFromJson
 import dev.nora.pdfdrawr.storage.saveToJson
+import dev.nora.pdfdrawr.sync.WebDavSyncService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.collections.component1
@@ -56,13 +58,11 @@ class PDFViewer(private val renderer: PdfRenderer) {
             paths.map { path -> SaveablePath(path.fillType.toString(), extractPathOps(path), page) }
         }
 
-        Log.d("DebugLog", savedPaths.toString())
-
         saveToJson(savedPaths, context, filename)
     }
 
     /**
-     * Gets and deserializes path save data.
+     * Get and deserialize path save data.
      *
      * @param context Global context
      * @param filename PDF filename
@@ -74,18 +74,25 @@ class PDFViewer(private val renderer: PdfRenderer) {
         // deserialize paths into Path objects
         val restoredPathsPerPage = mutableMapOf<Int, List<Path>>()
         savedPaths.groupBy { it.page }.forEach { (page, list) ->
-            restoredPathsPerPage[page] = list.map { it.toPath() } // deine Rückumwandlung
+            restoredPathsPerPage[page] = list.map { it.toPath() }
         }
 
         return@withContext restoredPathsPerPage
     }
 
-    fun close() {
-        renderer.close()
+    /**
+     * Save working file as PDF and upload to server.
+     *
+     * @param context Global context
+     * @param file Source PDF
+     * @param pathsPerPage Map containing all paths per page
+     */
+    suspend fun saveToPdf(context: Context, file: File, pathsPerPage: MutableMap<Int, List<Path>>, pageWidth: Float) = withContext(Dispatchers.IO) {
+        val newFile = PDFExporter.exportPdfWithAnnotations(file, pathsPerPage, pageWidth)
+        WebDavSyncService.uploadFile(context, newFile, "")
     }
 
-    // currently unused
-    fun loadPDF(context: Context, file: File): PDDocument {
-        return PDDocument.load(file)
+    fun close() {
+        renderer.close()
     }
 }

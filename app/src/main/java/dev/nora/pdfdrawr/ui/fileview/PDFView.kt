@@ -69,7 +69,7 @@ fun PdfView(pdfFile: File) {
 
         pdfViewer = viewer
 
-        // close renderer after pdfFile has changed
+        // close renderer and save after pdfFile has changed
         try {
             awaitCancellation()
         } finally {
@@ -88,6 +88,12 @@ fun PdfView(pdfFile: File) {
                     scope.launch { pdfViewer?.saveCanvasData(vm.pathsPerPage, context, pdfFile.name) } }
             ) {
                 Text("Save")
+            }
+            Button(
+                onClick = {
+                    scope.launch { pdfViewer?.saveToPdf(context, pdfFile, vm.pathsPerPage, vm.canvasWidth) } }
+            ) {
+                Text("Upload")
             }
             FilledIconToggleButton(checked = true, enabled = true, onCheckedChange = {
                 drawingEnabled = !drawingEnabled
@@ -156,10 +162,10 @@ fun DrawingCanvas(vm: DrawingCanvasViewModel, index: Int, drawingEnabled: Boolea
                 )
             }
     ) {
-        vm.pathsPerPage[index]?.forEach { drawPath(path = it, color = Color.Black, style = Stroke(10f)) }
+        vm.pathsPerPage[index]?.forEach { drawPath(path = it, color = Color.Red, style = Stroke(10f)) }
 
         if (vm.currentPath.value != null && vm.currentPathRef.intValue > 0 && vm.currentPage.intValue == index) {
-            drawPath(path = vm.currentPath.value!!, color = Color.Black, style = Stroke(10f))
+            drawPath(path = vm.currentPath.value!!, color = Color.Red, style = Stroke(10f))
         }
     }
 }

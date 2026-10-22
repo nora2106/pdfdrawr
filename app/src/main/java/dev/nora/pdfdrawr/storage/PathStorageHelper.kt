@@ -1,6 +1,7 @@
 package dev.nora.pdfdrawr.storage
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.PathSegment
@@ -13,7 +14,7 @@ import tools.jackson.module.kotlin.jacksonObjectMapper
 import java.io.File
 import java.io.IOException
 
-
+// TODO add custom DrawnPath data class to store path, color and strokewidth
 @Serializable
 data class PathOp (
     val type: PathSegment.Type,
@@ -29,9 +30,11 @@ data class SaveablePath(val fillType: String = "NonZero", val ops: List<PathOp> 
             when (op.type) {
                 PathSegment.Type.Move -> p.moveTo(op.points[0], op.points[1])
                 PathSegment.Type.Line    -> p.lineTo(op.points[0], op.points[1])
-                PathSegment.Type.Quadratic, PathSegment.Type.Conic    -> p.quadraticTo(op.points[0], op.points[1], op.points[2], op.points[3])
+                PathSegment.Type.Quadratic    -> p.quadraticTo(op.points[0], op.points[1], op.points[2], op.points[3])
                 PathSegment.Type.Cubic   -> p.cubicTo(op.points[0], op.points[1], op.points[2], op.points[3], op.points[4], op.points[5])
-                PathSegment.Type.Close, PathSegment.Type.Done -> p.close()
+                PathSegment.Type.Conic -> Log.d("DebugLog", "Unexpected occurrence of conic path.")
+                PathSegment.Type.Done -> {}
+                PathSegment.Type.Close-> p.close()
             }
         }
         return p

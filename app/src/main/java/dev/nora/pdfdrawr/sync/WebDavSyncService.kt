@@ -1,15 +1,22 @@
 package dev.nora.pdfdrawr.sync
 
+import android.content.Context
 import android.util.Log
 import dev.nora.pdfdrawr.storage.PreferenceStorage.getStoredNextcloudCredentials
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.Call
 import okhttp3.Credentials
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import java.io.File
-import android.content.Context
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.Response
 import okio.IOException
+import java.io.File
 
 object WebDavSyncService {
 
@@ -70,5 +77,29 @@ object WebDavSyncService {
             }
         }
         return@withContext file
+    }
+
+    /**
+     * Upload (and replace if exists) specific file.
+     *
+     * @param context Context
+     * @param file File to be uploaded
+     * @param path Path to the parent directory
+     */
+    suspend fun uploadFile(context: Context, file: File, path: String?) = withContext(Dispatchers.IO){
+        val storedCredentials = getStoredNextcloudCredentials(context) ?: throw IllegalStateException("Keine Zugangsdaten")
+        val baseUrl = storedCredentials.url
+        val client = OkHttpClient()
+
+        val request: Request = Request.Builder()
+            .url("$baseUrl/remote.php/dav/files/${storedCredentials.username}/$path/${file.name}")
+            .header("Authorization", Credentials.basic(storedCredentials.username, storedCredentials.password))
+            .put(file.asRequestBody("application/pdf".toMediaType()))
+            .build()
+
+        client.newCall(request).execute().use { res ->
+            Log.d("DebugLog", res.toString())
+            if (!res.isSuccessful) throw IOException("Upload fehlgeschlagen: ${res.code}")
+        }
     }
 }
