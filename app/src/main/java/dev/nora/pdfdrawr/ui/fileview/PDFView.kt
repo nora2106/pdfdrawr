@@ -35,8 +35,8 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import dev.nora.pdfdrawr.ui.viewmodel.DrawingCanvasViewModel
-import dev.nora.pdfdrawr.pdf.PDFViewer
+import dev.nora.pdfdrawr.viewmodel.DrawingCanvasViewModel
+import dev.nora.pdfdrawr.data.pdf.PDFViewer
 import java.io.File
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.Dispatchers

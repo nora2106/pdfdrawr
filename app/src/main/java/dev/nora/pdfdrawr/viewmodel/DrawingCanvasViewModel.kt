@@ -1,4 +1,4 @@
-package dev.nora.pdfdrawr.ui.viewmodel
+package dev.nora.pdfdrawr.viewmodel
 
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf

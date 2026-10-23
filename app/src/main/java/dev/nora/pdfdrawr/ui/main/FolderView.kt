@@ -18,8 +18,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import dev.nora.pdfdrawr.sync.FolderSyncManager.syncFolder
-import dev.nora.pdfdrawr.sync.WebDavFile
+import dev.nora.pdfdrawr.data.sync.FolderSyncManager.syncFolder
+import dev.nora.pdfdrawr.data.sync.WebDavFile
 import dev.nora.pdfdrawr.ui.theme.PDFDrawrTheme
 import androidx.compose.material3.Icon
 import androidx.compose.material.icons.Icons
@@ -31,11 +31,10 @@ import androidx.compose.material3.Button
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import dev.nora.pdfdrawr.helpers.convertFileSize
-import dev.nora.pdfdrawr.helpers.trimModifiedDate
-import dev.nora.pdfdrawr.storage.PreferenceStorage.getNextcloudUsername
-import dev.nora.pdfdrawr.sync.FolderSyncManager
-import dev.nora.pdfdrawr.ui.fileview.PdfPage
+import dev.nora.pdfdrawr.data.pdf.convertFileSize
+import dev.nora.pdfdrawr.data.pdf.trimModifiedDate
+import dev.nora.pdfdrawr.data.storage.PreferenceStorage.getNextcloudUsername
+import dev.nora.pdfdrawr.data.sync.FolderSyncManager
 import dev.nora.pdfdrawr.ui.fileview.PdfView
 import kotlinx.coroutines.launch
 import java.io.File

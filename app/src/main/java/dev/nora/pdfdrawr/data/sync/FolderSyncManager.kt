@@ -1,11 +1,9 @@
-package dev.nora.pdfdrawr.sync
+package dev.nora.pdfdrawr.data.sync
 
 import android.content.Context
-import android.net.Uri
 import android.util.Log
 import android.util.Xml
-import androidx.core.content.FileProvider
-import dev.nora.pdfdrawr.storage.PreferenceStorage.getStoredNextcloudCredentials
+import dev.nora.pdfdrawr.data.storage.PreferenceStorage.getStoredNextcloudCredentials
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.Credentials

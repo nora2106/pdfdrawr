@@ -1,4 +1,4 @@
-package dev.nora.pdfdrawr.helpers
+package dev.nora.pdfdrawr.data.pdf
 
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter

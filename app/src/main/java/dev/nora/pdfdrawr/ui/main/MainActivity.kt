@@ -1,4 +1,4 @@
-package dev.nora.pdfdrawr
+package dev.nora.pdfdrawr.ui.main
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -9,7 +9,6 @@ import androidx.compose.ui.Modifier
 import dev.nora.pdfdrawr.ui.theme.PDFDrawrTheme
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Button
@@ -19,10 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
-import dev.nora.pdfdrawr.ui.fileview.DrawingCanvas
-import dev.nora.pdfdrawr.ui.main.FolderView
 import dev.nora.pdfdrawr.ui.settings.LoginScreen
 
 class MainActivity : ComponentActivity() {

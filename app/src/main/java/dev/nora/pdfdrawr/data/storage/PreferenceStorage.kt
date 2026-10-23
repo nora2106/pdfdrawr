@@ -1,4 +1,4 @@
-package dev.nora.pdfdrawr.storage
+package dev.nora.pdfdrawr.data.storage
 
 import android.content.Context
 import androidx.datastore.core.DataStore

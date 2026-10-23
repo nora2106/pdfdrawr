@@ -1,4 +1,4 @@
-package dev.nora.pdfdrawr.pdf
+package dev.nora.pdfdrawr.data.pdf
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -6,11 +6,11 @@ import android.graphics.pdf.PdfRenderer
 import androidx.compose.ui.graphics.Path
 import androidx.core.graphics.createBitmap
 import java.io.File
-import dev.nora.pdfdrawr.storage.SaveablePath
-import dev.nora.pdfdrawr.storage.extractPathOps
-import dev.nora.pdfdrawr.storage.loadFromJson
-import dev.nora.pdfdrawr.storage.saveToJson
-import dev.nora.pdfdrawr.sync.WebDavSyncService
+import dev.nora.pdfdrawr.data.storage.SaveablePath
+import dev.nora.pdfdrawr.data.storage.extractPathOps
+import dev.nora.pdfdrawr.data.storage.loadFromJson
+import dev.nora.pdfdrawr.data.storage.saveToJson
+import dev.nora.pdfdrawr.data.sync.WebDavSyncService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.collections.component1

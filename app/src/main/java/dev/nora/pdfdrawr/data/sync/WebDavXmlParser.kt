@@ -1,4 +1,4 @@
-package dev.nora.pdfdrawr.sync
+package dev.nora.pdfdrawr.data.sync
 
 import org.xmlpull.v1.XmlPullParser
 

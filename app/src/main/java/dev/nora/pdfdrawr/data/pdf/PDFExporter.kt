@@ -1,4 +1,4 @@
-package dev.nora.pdfdrawr.pdf
+package dev.nora.pdfdrawr.data.pdf
 
 import android.util.Log
 import androidx.compose.ui.graphics.Path
@@ -6,7 +6,7 @@ import androidx.compose.ui.graphics.PathSegment
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.pdmodel.PDPage
 import com.tom_roush.pdfbox.pdmodel.PDPageContentStream
-import dev.nora.pdfdrawr.storage.extractPathOps
+import dev.nora.pdfdrawr.data.storage.extractPathOps
 import java.io.File
 
 

@@ -1,4 +1,4 @@
-package dev.nora.pdfdrawr.storage
+package dev.nora.pdfdrawr.data.storage
 
 import android.content.Context
 import android.util.Log
@@ -92,7 +92,7 @@ suspend fun loadFromJson(context: Context, pdfName: String): List<SaveablePath>?
 
     try {
         val jsonString = file.readText()
-        mapper.readValue(jsonString, object : TypeReference<List<SaveablePath>>() {})
+        mapper.readValue(jsonString, object : tools.jackson.core.type.TypeReference<List<SaveablePath>>() {})
     } catch(e: IOException) {
         e.printStackTrace()
         return@withContext null
