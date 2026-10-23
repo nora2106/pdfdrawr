@@ -5,16 +5,11 @@ import android.util.Log
 import dev.nora.pdfdrawr.storage.PreferenceStorage.getStoredNextcloudCredentials
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import okhttp3.Call
 import okhttp3.Credentials
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
-import okhttp3.Response
 import okio.IOException
 import java.io.File
 
@@ -98,7 +93,6 @@ object WebDavSyncService {
             .build()
 
         client.newCall(request).execute().use { res ->
-            Log.d("DebugLog", res.toString())
             if (!res.isSuccessful) throw IOException("Upload fehlgeschlagen: ${res.code}")
         }
     }

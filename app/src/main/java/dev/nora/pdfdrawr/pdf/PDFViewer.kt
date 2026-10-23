@@ -3,11 +3,8 @@ package dev.nora.pdfdrawr.pdf
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.pdf.PdfRenderer
-import android.icu.number.IntegerWidth
-import android.util.Log
 import androidx.compose.ui.graphics.Path
 import androidx.core.graphics.createBitmap
-import com.tom_roush.pdfbox.pdmodel.PDDocument
 import java.io.File
 import dev.nora.pdfdrawr.storage.SaveablePath
 import dev.nora.pdfdrawr.storage.extractPathOps

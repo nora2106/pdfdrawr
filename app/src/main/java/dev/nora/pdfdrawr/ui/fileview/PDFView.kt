@@ -3,7 +3,6 @@ package dev.nora.pdfdrawr.ui.fileview
 import android.graphics.Bitmap
 import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor
-import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -21,7 +20,6 @@ import androidx.compose.material.icons.rounded.RemoveRedEye
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilledIconToggleButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,7 +35,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import dev.nora.pdfdrawr.pdf.DrawingCanvasViewModel
+import dev.nora.pdfdrawr.ui.viewmodel.DrawingCanvasViewModel
 import dev.nora.pdfdrawr.pdf.PDFViewer
 import java.io.File
 import androidx.lifecycle.viewmodel.compose.viewModel
