@@ -10,7 +10,7 @@ import dev.nora.pdfdrawr.data.storage.SaveablePath
 import dev.nora.pdfdrawr.data.storage.extractPathOps
 import dev.nora.pdfdrawr.data.storage.loadFromJson
 import dev.nora.pdfdrawr.data.storage.saveToJson
-import dev.nora.pdfdrawr.data.sync.WebDavSyncService
+import dev.nora.pdfdrawr.data.sync.WebDavRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.collections.component1
@@ -85,8 +85,8 @@ class PDFViewer(private val renderer: PdfRenderer) {
      * @param pathsPerPage Map containing all paths per page
      */
     suspend fun saveToPdf(context: Context, file: File, pathsPerPage: MutableMap<Int, List<Path>>, pageWidth: Float) = withContext(Dispatchers.IO) {
-        val newFile = PDFExporter.exportPdfWithAnnotations(file, pathsPerPage, pageWidth)
-        WebDavSyncService.uploadFile(context, newFile, "")
+        val newFile = AnnotationRepository.exportPdfWithAnnotations(file, pathsPerPage, pageWidth)
+        WebDavRepository.uploadFile(context, newFile, "")
     }
 
     fun close() {

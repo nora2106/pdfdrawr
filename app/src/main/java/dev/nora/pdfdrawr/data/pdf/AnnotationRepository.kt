@@ -9,8 +9,10 @@ import com.tom_roush.pdfbox.pdmodel.PDPageContentStream
 import dev.nora.pdfdrawr.data.storage.extractPathOps
 import java.io.File
 
-
-object PDFExporter {
+/**
+ * Take size in bytes and return appropriate conversion depending on size
+ */
+object AnnotationRepository {
     fun exportPdfWithAnnotations(file: File, annotations: Map<Int, List<Path>>?, pageWidth: Float): File {
         val outFile = File(file.parentFile, "${file.nameWithoutExtension}_annotated.pdf")
 

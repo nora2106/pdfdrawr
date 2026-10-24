@@ -13,7 +13,7 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import okio.IOException
 import java.io.File
 
-object WebDavSyncService {
+object WebDavRepository {
 
     /**
      * Try to connect to Nextcloud instance

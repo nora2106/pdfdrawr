@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import dev.nora.pdfdrawr.data.storage.PreferenceStorage.storeLoginData
-import dev.nora.pdfdrawr.data.sync.WebDavSyncService.testWebdavConnection
+import dev.nora.pdfdrawr.data.sync.WebDavRepository.testWebdavConnection
 import dev.nora.pdfdrawr.ui.theme.PDFDrawrTheme
 import kotlinx.coroutines.launch
 

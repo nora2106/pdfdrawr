@@ -39,6 +39,7 @@ import dev.nora.pdfdrawr.viewmodel.DrawingCanvasViewModel
 import dev.nora.pdfdrawr.data.pdf.PDFViewer
 import java.io.File
 import androidx.lifecycle.viewmodel.compose.viewModel
+import dev.nora.pdfdrawr.viewmodel.PdfViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitCancellation
@@ -53,6 +54,7 @@ fun PdfView(pdfFile: File) {
     var pdfViewer by remember { mutableStateOf<PDFViewer?>(null) }
     var drawingEnabled by remember { mutableStateOf(true) }
     val vm: DrawingCanvasViewModel = viewModel()
+    val pdfVm: PdfViewModel = viewModel()
 
     LaunchedEffect(pdfFile) {
         // create renderer for file

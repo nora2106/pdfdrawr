@@ -14,6 +14,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.xmlpull.v1.XmlPullParser
 import java.io.File
 
+// TODO clean up and improve
 object FolderSyncManager {
     private val ns: String? = null
 
@@ -81,7 +82,7 @@ object FolderSyncManager {
      * @param path Path to the parent directory
      */
     suspend fun getFile(context: Context, fileName: String?, path: String?): File {
-        return WebDavSyncService.downloadFile(context, fileName, path)
+        return WebDavRepository.downloadFile(context, fileName, path)
     }
 
     // TODO currently unused
