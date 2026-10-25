@@ -6,10 +6,6 @@ import android.graphics.pdf.PdfRenderer
 import androidx.compose.ui.graphics.Path
 import androidx.core.graphics.createBitmap
 import java.io.File
-import dev.nora.pdfdrawr.data.storage.SaveablePath
-import dev.nora.pdfdrawr.data.storage.extractPathOps
-import dev.nora.pdfdrawr.data.storage.loadFromJson
-import dev.nora.pdfdrawr.data.storage.saveToJson
 import dev.nora.pdfdrawr.data.sync.WebDavRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -43,13 +39,7 @@ class PDFViewer(private val renderer: PdfRenderer) {
         return@withContext bitmap
     }
 
-    /**
-     * Save canvas data as a list of serializable path objects.
-     *
-     * @param pathsPerPage Map containing all paths per page
-     * @param context Global context
-     * @param filename PDF filename
-     */
+
     suspend fun saveCanvasData(pathsPerPage: MutableMap<Int, List<Path>>, context: Context, filename: String) {
         val savedPaths = pathsPerPage.flatMap { (page, paths) ->
             paths.map { path -> SaveablePath(path.fillType.toString(), extractPathOps(path), page) }
@@ -77,17 +67,6 @@ class PDFViewer(private val renderer: PdfRenderer) {
         return@withContext restoredPathsPerPage
     }
 
-    /**
-     * Save working file as PDF and upload to server.
-     *
-     * @param context Global context
-     * @param file Source PDF
-     * @param pathsPerPage Map containing all paths per page
-     */
-    suspend fun saveToPdf(context: Context, file: File, pathsPerPage: MutableMap<Int, List<Path>>, pageWidth: Float) = withContext(Dispatchers.IO) {
-        val newFile = AnnotationRepository.exportPdfWithAnnotations(file, pathsPerPage, pageWidth)
-        WebDavRepository.uploadFile(context, newFile, "")
-    }
 
     fun close() {
         renderer.close()

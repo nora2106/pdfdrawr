@@ -1,8 +1,7 @@
 package dev.nora.pdfdrawr.ui.fileview
 
+import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.pdf.PdfRenderer
-import android.os.ParcelFileDescriptor
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -23,6 +22,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.currentCompositionContext
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,62 +36,35 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import dev.nora.pdfdrawr.viewmodel.DrawingCanvasViewModel
-import dev.nora.pdfdrawr.data.pdf.PDFViewer
 import java.io.File
 import androidx.lifecycle.viewmodel.compose.viewModel
+import dev.nora.pdfdrawr.data.pdf.AnnotationRepository
 import dev.nora.pdfdrawr.viewmodel.PdfViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 // TODO currently only works on vertical screens
 @Composable
 fun PdfView(pdfFile: File) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var pdfViewer by remember { mutableStateOf<PDFViewer?>(null) }
     var drawingEnabled by remember { mutableStateOf(true) }
     val vm: DrawingCanvasViewModel = viewModel()
     val pdfVm: PdfViewModel = viewModel()
 
     LaunchedEffect(pdfFile) {
-        // create renderer for file
-        val input = ParcelFileDescriptor.open(pdfFile, ParcelFileDescriptor.MODE_READ_ONLY)
-        val renderer = PdfRenderer(input)
-        val viewer = PDFViewer(renderer)
-
-        // clear canvas and save/redraw saved data
-        vm.clear()
-        val saved = viewer.getSavedData(context, pdfFile.name)
-        if(saved != null) vm.redraw(saved)
-
-        pdfViewer = viewer
-
-        // close renderer and save after pdfFile has changed
-        try {
-            awaitCancellation()
-        } finally {
-            pdfViewer = null
-
-            withContext(NonCancellable + Dispatchers.IO) {
-                viewer.saveCanvasData(vm.pathsPerPage, context, pdfFile.name)
-                viewer.close()
-            }
-        }
+        pdfVm.openFile(pdfFile)
     }
     Column() {
         Row() {
             Button(
                 onClick = {
-                    scope.launch { pdfViewer?.saveCanvasData(vm.pathsPerPage, context, pdfFile.name) } }
+                    scope.launch { pdfVm.saveData(vm.pathsPerPage) } }
             ) {
                 Text("Save")
             }
             Button(
                 onClick = {
-                    scope.launch { pdfViewer?.saveToPdf(context, pdfFile, vm.pathsPerPage, vm.canvasWidth) } }
+                    scope.launch { pdfVm.uploadAsPdf( pdfFile, vm.pathsPerPage, vm.canvasWidth) } }
             ) {
                 Text("Upload")
             }
@@ -101,33 +74,31 @@ fun PdfView(pdfFile: File) {
             }, content = {Icon(Icons.Rounded.RemoveRedEye, contentDescription = "Toggle View/Draw")})
         }
 
-        pdfViewer?.let{
-            PageColumn(vm, pdfViewer!!, drawingEnabled)
-        }
+        PageColumn(vm, pdfVm, drawingEnabled)
     }
 }
 
 @Composable
-fun PageColumn(vm: DrawingCanvasViewModel, pdfViewer: PDFViewer, drawingEnabled: Boolean) {
+fun PageColumn(vm: DrawingCanvasViewModel, pdfVm: PdfViewModel, drawingEnabled: Boolean) {
     LazyColumn(
         userScrollEnabled = !drawingEnabled
     ) {
-        items(count = pdfViewer.getPageCount()) { index -> PdfPage(vm, pdfViewer, index, drawingEnabled) }
+        items(count = pdfVm.getPageCount()) { index -> PdfPage(vm, pdfVm, index, drawingEnabled) }
     }
 }
 
 @Composable
-fun PdfPage(vm: DrawingCanvasViewModel, pdfViewer: PDFViewer, index: Int, drawingEnabled: Boolean) {
+fun PdfPage(vm: DrawingCanvasViewModel, pdfVm: PdfViewModel, index: Int, drawingEnabled: Boolean) {
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
 
     LaunchedEffect(index) {
-        bitmap = pdfViewer.renderSinglePage(index)
+        bitmap = pdfVm.renderPage(index)
     }
 
     // TODO add white background (transparent pdfs and placeholder)
     Box( Modifier
         .fillMaxWidth()
-        .aspectRatio(pdfViewer.ratio(index))
+        .aspectRatio(pdfVm.ratio(index))
     ) {
         bitmap?.let {
             Image(

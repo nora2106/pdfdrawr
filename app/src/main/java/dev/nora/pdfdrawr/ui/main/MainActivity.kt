@@ -19,6 +19,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
+import dev.nora.pdfdrawr.data.sync.WebDavRepository
 import dev.nora.pdfdrawr.ui.settings.LoginScreen
 
 class MainActivity : ComponentActivity() {
@@ -26,6 +27,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         // required by PdfBox-Android API
         PDFBoxResourceLoader.init(applicationContext)
+        WebDavRepository.init(applicationContext)
 
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

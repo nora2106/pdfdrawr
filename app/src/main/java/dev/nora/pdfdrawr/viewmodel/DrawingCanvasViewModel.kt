@@ -8,6 +8,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Path
 import androidx.lifecycle.ViewModel
 
+// TODO refactor into normal class to avoid multiple view models per view
 class DrawingCanvasViewModel: ViewModel() {
     val paths = mutableStateListOf<Path>()
     val pathsPerPage = mutableMapOf<Int, List<Path>>()

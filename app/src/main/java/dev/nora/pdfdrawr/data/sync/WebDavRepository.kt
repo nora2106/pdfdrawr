@@ -14,7 +14,12 @@ import okio.IOException
 import java.io.File
 
 object WebDavRepository {
+    private lateinit var appContext: Context
+    private val client = OkHttpClient()
 
+    fun init(context: Context) {
+        appContext = context.applicationContext
+    }
     /**
      * Try to connect to Nextcloud instance
      *
@@ -25,7 +30,6 @@ object WebDavRepository {
      */
     suspend fun testWebdavConnection(url: String, username: String, password: String): Boolean = withContext(Dispatchers.IO) {
             val credential = Credentials.basic(username, password)
-            val client = OkHttpClient()
             val request = Request.Builder()
                 .url(url)
                 .header("Authorization", credential)
@@ -44,15 +48,14 @@ object WebDavRepository {
     /**
      * Download specific file, throw error if it wasn't found
      *
-     * @param context Context
      * @param fileName Name of the file
      * @param path Path to the parent directory
      * @return the file
      */
-    suspend fun downloadFile(context: Context, fileName: String?, path: String?): File = withContext(Dispatchers.IO){
+    suspend fun downloadFile(fileName: String?, path: String?): File = withContext(Dispatchers.IO){
         if(fileName == null) throw IllegalArgumentException("File hat keinen Namen")
 
-        val storedCredentials = getStoredNextcloudCredentials(context) ?: throw IllegalStateException("Keine Zugangsdaten")
+        val storedCredentials = getStoredNextcloudCredentials(appContext) ?: throw IllegalStateException("Keine Zugangsdaten")
         val url = storedCredentials.url
 
         val client = OkHttpClient()
@@ -61,7 +64,7 @@ object WebDavRepository {
             .header("Authorization", Credentials.basic(storedCredentials.username, storedCredentials.password))
             .build()
 
-        val file = File(context.filesDir, fileName)
+        val file = File(appContext.filesDir, fileName)
 
         client.newCall(request).execute().use { res ->
             if(!res.isSuccessful) throw IOException("Download fehlgeschlagen: ${res.code}")
@@ -77,12 +80,11 @@ object WebDavRepository {
     /**
      * Upload (and replace if exists) specific file.
      *
-     * @param context Context
      * @param file File to be uploaded
      * @param path Path to the parent directory
      */
-    suspend fun uploadFile(context: Context, file: File, path: String?) = withContext(Dispatchers.IO){
-        val storedCredentials = getStoredNextcloudCredentials(context) ?: throw IllegalStateException("Keine Zugangsdaten")
+    suspend fun uploadFile(file: File, path: String?) = withContext(Dispatchers.IO){
+        val storedCredentials = getStoredNextcloudCredentials(appContext) ?: throw IllegalStateException("Keine Zugangsdaten")
         val baseUrl = storedCredentials.url
         val client = OkHttpClient()
 
