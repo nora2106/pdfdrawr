@@ -1,6 +1,5 @@
 package dev.nora.pdfdrawr.ui.fileview
 
-import android.content.Context
 import android.graphics.Bitmap
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -22,7 +21,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.currentCompositionContext
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,22 +32,20 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import dev.nora.pdfdrawr.viewmodel.DrawingCanvasViewModel
 import java.io.File
 import androidx.lifecycle.viewmodel.compose.viewModel
-import dev.nora.pdfdrawr.data.pdf.AnnotationRepository
 import dev.nora.pdfdrawr.viewmodel.PdfViewModel
 import kotlinx.coroutines.launch
 
 // TODO currently only works on vertical screens
 @Composable
 fun PdfView(pdfFile: File) {
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var drawingEnabled by remember { mutableStateOf(true) }
     val vm: DrawingCanvasViewModel = viewModel()
     val pdfVm: PdfViewModel = viewModel()
+    pdfVm.init(vm)
 
     LaunchedEffect(pdfFile) {
         pdfVm.openFile(pdfFile)
@@ -58,13 +54,13 @@ fun PdfView(pdfFile: File) {
         Row() {
             Button(
                 onClick = {
-                    scope.launch { pdfVm.saveData(vm.pathsPerPage) } }
+                    scope.launch { pdfVm.saveData() } }
             ) {
                 Text("Save")
             }
             Button(
                 onClick = {
-                    scope.launch { pdfVm.uploadAsPdf( pdfFile, vm.pathsPerPage, vm.canvasWidth) } }
+                    scope.launch { pdfVm.uploadAsPdf() } }
             ) {
                 Text("Upload")
             }

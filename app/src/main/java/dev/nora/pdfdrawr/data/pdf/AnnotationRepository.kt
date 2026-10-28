@@ -142,11 +142,10 @@ class AnnotationRepository(private val context: Context) {
     /**
      * Find corresponding file and extract path list.
      *
-     * @param context Global context.
      * @param pdfName PDF filename.
      * @return List of serializable paths.
      */
-    suspend fun loadFromJson(context: Context, pdfName: String): List<SaveablePath>? = withContext(Dispatchers.IO) {
+    suspend fun loadFromJson(pdfName: String): List<SaveablePath>? = withContext(Dispatchers.IO) {
         val file = File(context.filesDir, "$pdfName.annotations.json")
         if(!file.exists()) return@withContext null
 
