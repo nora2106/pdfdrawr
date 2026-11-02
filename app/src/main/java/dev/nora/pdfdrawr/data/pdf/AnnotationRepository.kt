@@ -1,6 +1,8 @@
 package dev.nora.pdfdrawr.data.pdf
 
 import android.content.Context
+import android.graphics.Color
+import android.os.SystemClock
 import android.util.Log
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathFillType
@@ -11,13 +13,14 @@ import com.tom_roush.pdfbox.pdmodel.PDPageContentStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import tools.jackson.core.JacksonException
 import tools.jackson.module.kotlin.jacksonObjectMapper
 import java.io.File
 import java.io.IOException
 
 class AnnotationRepository(private val context: Context) {
-    val mapper = jacksonObjectMapper()
 
     fun exportPdfWithAnnotations(file: File, annotations: Map<Int, List<Path>>?, pageWidth: Float): File {
         val outFile = File(file.parentFile, "${file.nameWithoutExtension}_annotated.pdf")
@@ -127,7 +130,8 @@ class AnnotationRepository(private val context: Context) {
         val file = File(context.filesDir, "$pdfName.annotations.json")
 
         try {
-            file.writeText(mapper.writeValueAsString(paths))
+            val jsonString = Json.encodeToString(paths)
+            file.writeText(jsonString)
         } catch (e: IOException) {
             e.printStackTrace()
         }
@@ -143,12 +147,14 @@ class AnnotationRepository(private val context: Context) {
      * @return List of serializable paths.
      */
     suspend fun loadFromJson(pdfName: String): List<SaveablePath>? = withContext(Dispatchers.IO) {
+
         val file = File(context.filesDir, "$pdfName.annotations.json")
         if(!file.exists()) return@withContext null
 
         try {
             val jsonString = file.readText()
-            mapper.readValue(jsonString, object : tools.jackson.core.type.TypeReference<List<SaveablePath>>() {})
+            Json.decodeFromString<List<SaveablePath>>(jsonString)
+
         } catch(e: IOException) {
             e.printStackTrace()
             return@withContext null
@@ -168,7 +174,12 @@ data class PathOp (
 )
 
 @Serializable
-data class SaveablePath(val fillType: String = "NonZero", val ops: List<PathOp> = emptyList(), val page: Int = 0) {
+data class SaveablePath(
+    val fillType: String = "NonZero",
+    val ops: List<PathOp> = emptyList(),
+    val page: Int = 0,
+    val style: PathStyle = PathStyle(Color.BLACK, 10f)
+) {
     fun toPath(): Path {
         val p = Path()
         p.fillType = if (fillType == "EvenOdd") PathFillType.EvenOdd else PathFillType.NonZero
@@ -186,3 +197,8 @@ data class SaveablePath(val fillType: String = "NonZero", val ops: List<PathOp> 
         return p
     }
 }
+
+@Serializable
+data class PathStyle(
+    val color: Int,
+    val strokeWidth: Float)

@@ -32,9 +32,13 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import dev.nora.pdfdrawr.viewmodel.DrawingCanvasViewModel
 import java.io.File
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import dev.nora.pdfdrawr.data.pdf.AnnotationRepository
 import dev.nora.pdfdrawr.viewmodel.PdfViewModel
 import kotlinx.coroutines.launch
 
@@ -42,10 +46,13 @@ import kotlinx.coroutines.launch
 @Composable
 fun PdfView(pdfFile: File) {
     val scope = rememberCoroutineScope()
+    val appContext = LocalContext.current.applicationContext
     var drawingEnabled by remember { mutableStateOf(true) }
+
     val vm: DrawingCanvasViewModel = viewModel()
-    val pdfVm: PdfViewModel = viewModel()
-    pdfVm.init(vm)
+    val pdfVm: PdfViewModel = viewModel(factory = viewModelFactory {
+        initializer { PdfViewModel(AnnotationRepository(appContext), vm) }
+    })
 
     LaunchedEffect(pdfFile) {
         pdfVm.openFile(pdfFile)
@@ -85,7 +92,8 @@ fun PageColumn(vm: DrawingCanvasViewModel, pdfVm: PdfViewModel, drawingEnabled: 
 
 @Composable
 fun PdfPage(vm: DrawingCanvasViewModel, pdfVm: PdfViewModel, index: Int, drawingEnabled: Boolean) {
-    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
+    val file = pdfVm.currentFile
+    var bitmap by remember(file) { mutableStateOf<Bitmap?>(null) }
 
     LaunchedEffect(index) {
         bitmap = pdfVm.renderPage(index)
@@ -129,7 +137,7 @@ fun DrawingCanvas(vm: DrawingCanvasViewModel, index: Int, drawingEnabled: Boolea
                 )
             }
     ) {
-        vm.pathsPerPage[index]?.forEach { drawPath(path = it, color = Color.Red, style = Stroke(10f)) }
+        vm.pathsPerPage[index]?.forEach { drawPath(path = it, color = Color.Black, style = Stroke(10f)) }
 
         if (vm.currentPath.value != null && vm.currentPathRef.intValue > 0 && vm.currentPage.intValue == index) {
             drawPath(path = vm.currentPath.value!!, color = Color.Red, style = Stroke(10f))

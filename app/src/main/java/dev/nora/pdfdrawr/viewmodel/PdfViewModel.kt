@@ -1,6 +1,5 @@
 package dev.nora.pdfdrawr.viewmodel
 
-import android.app.Application
 import android.graphics.Bitmap
 import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor
@@ -20,26 +19,32 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.io.File
 
-class PdfViewModel(app: Application) : ViewModel() {
+class PdfViewModel(private val annotationRep: AnnotationRepository, private val canvasVm: DrawingCanvasViewModel) : ViewModel() {
     var viewer by mutableStateOf<PDFViewer?>(null)
         private set
-    private var currentFile: File? = null
-    private val annotationRep = AnnotationRepository(app.applicationContext)
-    private var canvasVm: DrawingCanvasViewModel? = null
-
-    fun init(canvas: DrawingCanvasViewModel) {
-        canvasVm = canvas
-    }
+    var currentFile by mutableStateOf<File?>(null)
+        private set
 
     fun openFile(file: File) = viewModelScope.launch {
         if (file == currentFile) return@launch
 
-        val saveData = loadSaveData()
-        if(saveData != null) canvasVm?.redraw(saveData)
+        // save and close current file
+        viewer = null
+        closeCurrentFile()
+        canvasVm.clear()
 
-        val input = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
+        val saveData = loadSaveData(file)
+        if(saveData != null) canvasVm.redraw(saveData)
+
+        val newViewer = withContext(Dispatchers.IO) {
+            PDFViewer(PdfRenderer(ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)))
+        }
+
+        /*val input = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
         val renderer = PdfRenderer(input)
-        renderer.let { viewer = PDFViewer(it) }
+        renderer.let { viewer = PDFViewer(it) }*/
+        currentFile = file
+        viewer = newViewer
     }
 
     suspend fun closeCurrentFile() = withContext(Dispatchers.IO) {
@@ -55,9 +60,9 @@ class PdfViewModel(app: Application) : ViewModel() {
      * Save canvas data as a list of serializable path objects.
      */
     suspend fun saveData() = withContext(Dispatchers.IO){
-        if(currentFile == null || canvasVm == null) return@withContext
+        if(currentFile == null) return@withContext
 
-        val savedPaths = canvasVm!!.pathsPerPage.flatMap { (page, paths) ->
+        val savedPaths = canvasVm.pathsPerPage.flatMap { (page, paths) ->
             paths.map { path -> SaveablePath(path.fillType.toString(), annotationRep.extractPathOps(path), page) }
         }
 
@@ -67,11 +72,11 @@ class PdfViewModel(app: Application) : ViewModel() {
     /**
      * Get and deserialize path save data.
      *
+     * @param file File
      * @return List of paths per page
      */
-    suspend fun loadSaveData(): Map<Int, List<Path>>? = withContext(Dispatchers.IO){
-        if(currentFile == null) return@withContext null
-        val savedPaths: List<SaveablePath> = annotationRep.loadFromJson( currentFile!!.name) ?: return@withContext null
+    suspend fun loadSaveData(file: File): Map<Int, List<Path>>? = withContext(Dispatchers.IO){
+        val savedPaths: List<SaveablePath> = annotationRep.loadFromJson( file.name) ?: return@withContext null
 
         // deserialize paths into Path objects
         val restoredPathsPerPage = mutableMapOf<Int, List<Path>>()
@@ -83,13 +88,11 @@ class PdfViewModel(app: Application) : ViewModel() {
     }
 
     /**
-     * Save working file as PDF and upload to server.
-     *
-     * @param pathsPerPage Map containing all paths per page
+     * Save current file as PDF and upload to server.
      */
     suspend fun uploadAsPdf() = withContext(Dispatchers.IO) {
-        if(currentFile == null || canvasVm == null) return@withContext
-        val newFile = annotationRep.exportPdfWithAnnotations(currentFile!!, canvasVm!!.pathsPerPage, canvasVm!!.canvasWidth)
+        if(currentFile == null) return@withContext
+        val newFile = annotationRep.exportPdfWithAnnotations(currentFile!!, canvasVm.pathsPerPage, canvasVm.canvasWidth)
         // TODO add path
         WebDavRepository.uploadFile(newFile, "")
     }

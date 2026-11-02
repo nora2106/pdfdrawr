@@ -14,10 +14,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.xmlpull.v1.XmlPullParser
 import java.io.File
 
-// TODO clean up and improve
 object FolderSyncManager {
-    private val ns: String? = null
-
     /**
      * Get list of files from specified folder.
      *
@@ -59,7 +56,7 @@ object FolderSyncManager {
                 res.body.byteStream().use { inputStream ->
                     val parser: XmlPullParser = Xml.newPullParser()
                     parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false)
-                    parser.setInput(inputStream, null)   // null = Encoding automatisch erkennen
+                    parser.setInput(inputStream, null)
                     parser.nextTag()
                     val entries = WebDavXmlParser.readFeed(parser)
                     for (entry in entries) {
@@ -77,27 +74,11 @@ object FolderSyncManager {
     /**
      * Initiate file download
      *
-     * @param context Context
      * @param fileName Name of the file
      * @param path Path to the parent directory
      */
-    suspend fun getFile(context: Context, fileName: String?, path: String?): File {
-        return WebDavRepository.downloadFile(context, fileName, path)
-    }
-
-    // TODO currently unused
-    fun getFileFromAssets(context: Context, fileName: String): File {
-        val file = File(context.cacheDir, fileName)
-
-        if (!file.exists()) {
-            val outputStream = file.outputStream()
-            val inputStream = context.assets.open(fileName)
-            inputStream.copyTo(outputStream)
-            outputStream.close()
-            inputStream.close()
-        }
-
-        return file
+    suspend fun getFile(fileName: String?, path: String?): File {
+        return WebDavRepository.downloadFile(fileName, path)
     }
 }
 
@@ -109,4 +90,3 @@ data class WebDavFile(
     val name: String?,
     val size: String?
 )
-

@@ -7,6 +7,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Path
 import androidx.lifecycle.ViewModel
+import dev.nora.pdfdrawr.data.pdf.PathStyle
 
 // TODO refactor into normal class to avoid multiple view models per view
 class DrawingCanvasViewModel: ViewModel() {
@@ -107,3 +108,8 @@ class DrawingCanvasViewModel: ViewModel() {
         savedPaths?.forEach { (page, paths) -> pathsPerPage[page] = paths }
     }
 }
+
+data class DrawnPath(
+    val path: Path,
+    val style: PathStyle
+)

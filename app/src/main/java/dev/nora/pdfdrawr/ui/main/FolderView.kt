@@ -103,7 +103,6 @@ fun FolderView() {
 @Composable
 fun FileElement(file: WebDavFile, onFileClick: (File) -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
     FlowRow(
@@ -112,7 +111,7 @@ fun FileElement(file: WebDavFile, onFileClick: (File) -> Unit) {
             .clickable(
                 onClick = {
                     scope.launch {
-                        val downloadedFile = FolderSyncManager.getFile(context, file.name, file.path)
+                        val downloadedFile = FolderSyncManager.getFile(file.name, file.path)
                         onFileClick(downloadedFile)
                     }
                 },
