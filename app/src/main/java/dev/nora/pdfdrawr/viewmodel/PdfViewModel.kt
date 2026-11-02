@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.nora.pdfdrawr.data.pdf.AnnotationRepository
 import dev.nora.pdfdrawr.data.pdf.PDFViewer
+import dev.nora.pdfdrawr.data.pdf.PathStyle
 import dev.nora.pdfdrawr.data.pdf.SaveablePath
 import dev.nora.pdfdrawr.data.sync.WebDavRepository
 import kotlinx.coroutines.Dispatchers
@@ -63,7 +64,7 @@ class PdfViewModel(private val annotationRep: AnnotationRepository, private val 
         if(currentFile == null) return@withContext
 
         val savedPaths = canvasVm.pathsPerPage.flatMap { (page, paths) ->
-            paths.map { path -> SaveablePath(path.fillType.toString(), annotationRep.extractPathOps(path), page) }
+            paths.map { pathData -> SaveablePath(pathData.path.fillType.toString(), annotationRep.extractPathOps(pathData.path), page, pathData.style) }
         }
 
         annotationRep.saveToJson(savedPaths, currentFile!!.name)
@@ -75,13 +76,16 @@ class PdfViewModel(private val annotationRep: AnnotationRepository, private val 
      * @param file File
      * @return List of paths per page
      */
-    suspend fun loadSaveData(file: File): Map<Int, List<Path>>? = withContext(Dispatchers.IO){
+    suspend fun loadSaveData(file: File): Map<Int, List<DrawnPath>>? = withContext(Dispatchers.IO){
         val savedPaths: List<SaveablePath> = annotationRep.loadFromJson( file.name) ?: return@withContext null
 
         // deserialize paths into Path objects
-        val restoredPathsPerPage = mutableMapOf<Int, List<Path>>()
+        val restoredPathsPerPage = mutableMapOf<Int, List<DrawnPath>>()
         savedPaths.groupBy { it.page }.forEach { (page, list) ->
-            restoredPathsPerPage[page] = list.map { it.toPath() }
+            restoredPathsPerPage[page] = list.map { saveable -> DrawnPath(
+                path = saveable.toPath(),
+                style = saveable.style
+            ) }
         }
 
         return@withContext restoredPathsPerPage

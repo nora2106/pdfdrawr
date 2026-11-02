@@ -1,28 +1,28 @@
 package dev.nora.pdfdrawr.data.pdf
 
 import android.content.Context
-import android.graphics.Color
-import android.os.SystemClock
 import android.util.Log
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.PathSegment
+import androidx.compose.ui.graphics.toColorLong
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.pdmodel.PDPage
 import com.tom_roush.pdfbox.pdmodel.PDPageContentStream
+import dev.nora.pdfdrawr.viewmodel.DrawnPath
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import tools.jackson.core.JacksonException
-import tools.jackson.module.kotlin.jacksonObjectMapper
 import java.io.File
 import java.io.IOException
 
 class AnnotationRepository(private val context: Context) {
 
-    fun exportPdfWithAnnotations(file: File, annotations: Map<Int, List<Path>>?, pageWidth: Float): File {
+    fun exportPdfWithAnnotations(file: File, annotations: Map<Int, List<DrawnPath>>?, pageWidth: Float): File {
         val outFile = File(file.parentFile, "${file.nameWithoutExtension}_annotated.pdf")
 
         PDDocument.load(file).use { document ->
@@ -36,7 +36,7 @@ class AnnotationRepository(private val context: Context) {
         return outFile
     }
 
-    private fun drawAnnotationsOnPage(doc: PDDocument, page: PDPage, annotations: List<Path>?, pageWidth: Float) {
+    private fun drawAnnotationsOnPage(doc: PDDocument, page: PDPage, annotations: List<DrawnPath>?, pageWidth: Float) {
         if(annotations == null) return
 
         val w = page.mediaBox.width
@@ -45,7 +45,6 @@ class AnnotationRepository(private val context: Context) {
             val pixelWidth = 1080f
 
             cs.setStrokingColor(0f, 0f, 0f)
-            cs.setLineWidth(10f / pixelWidth * w)
             cs.setLineCapStyle(1)
             cs.setLineJoinStyle(1)
             var lastX = 0f
@@ -55,7 +54,9 @@ class AnnotationRepository(private val context: Context) {
             fun scaleY(v: Float) = h - v / pageWidth * w
 
             annotations.forEach { ann ->
-                val ops = extractPathOps(ann)
+                // TODO add color
+                cs.setLineWidth(ann.style.strokeWidth / pixelWidth * w)
+                val ops = extractPathOps(ann.path)
                 ops.forEach { op ->
                     when (op.type) {
                         PathSegment.Type.Move -> {
@@ -93,7 +94,6 @@ class AnnotationRepository(private val context: Context) {
                         }
 
                         PathSegment.Type.Conic -> Log.d("DebugLog", "Unexpected occurrence of conic path.")
-
                         PathSegment.Type.Done -> {}
                         PathSegment.Type.Close -> cs.closePath()
                     }
@@ -178,7 +178,7 @@ data class SaveablePath(
     val fillType: String = "NonZero",
     val ops: List<PathOp> = emptyList(),
     val page: Int = 0,
-    val style: PathStyle = PathStyle(Color.BLACK, 10f)
+    val style: PathStyle = PathStyle(Color.Black.toColorLong(), 10f)
 ) {
     fun toPath(): Path {
         val p = Path()
@@ -200,5 +200,9 @@ data class SaveablePath(
 
 @Serializable
 data class PathStyle(
-    val color: Int,
-    val strokeWidth: Float)
+    val color: Long,
+    val strokeWidth: Float){
+
+    val composeColor: Color
+        get() = Color(color)
+}

@@ -137,10 +137,10 @@ fun DrawingCanvas(vm: DrawingCanvasViewModel, index: Int, drawingEnabled: Boolea
                 )
             }
     ) {
-        vm.pathsPerPage[index]?.forEach { drawPath(path = it, color = Color.Black, style = Stroke(10f)) }
+        vm.pathsPerPage[index]?.forEach { drawPath(path = it.path, color = it.style.composeColor, style = Stroke(it.style.strokeWidth)) }
 
         if (vm.currentPath.value != null && vm.currentPathRef.intValue > 0 && vm.currentPage.intValue == index) {
-            drawPath(path = vm.currentPath.value!!, color = Color.Red, style = Stroke(10f))
+            drawPath(path = vm.currentPath.value!!, color = Color(vm.currentColor), style = Stroke(vm.currentWidth))
         }
     }
 }

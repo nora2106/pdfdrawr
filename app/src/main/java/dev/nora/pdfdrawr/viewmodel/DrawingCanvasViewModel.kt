@@ -1,5 +1,6 @@
 package dev.nora.pdfdrawr.viewmodel
 
+import android.graphics.Color
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -12,11 +13,13 @@ import dev.nora.pdfdrawr.data.pdf.PathStyle
 // TODO refactor into normal class to avoid multiple view models per view
 class DrawingCanvasViewModel: ViewModel() {
     val paths = mutableStateListOf<Path>()
-    val pathsPerPage = mutableMapOf<Int, List<Path>>()
+    val pathsPerPage = mutableMapOf<Int, List<DrawnPath>>()
     var canvasWidth = 0f
     val currentPage = mutableIntStateOf(-1)
     val currentPath = mutableStateOf<Path?>(null)
     val currentPathRef = mutableIntStateOf(1)
+    var currentColor: Long = Color.BLACK.toLong()
+    var currentWidth = 10f
     private val lastOffset = mutableStateOf<Offset?>(null)
 
     /**
@@ -26,8 +29,6 @@ class DrawingCanvasViewModel: ViewModel() {
      * @param pageIndex Index of current page
      */
     fun onTapGesture(offset: Offset, pageIndex: Int, pageWidth: Float) {
-        val p = Offset(offset.x / pageWidth, offset.y / pageWidth)
-
         currentPath.value = Path()
         currentPage.intValue = pageIndex
         currentPath.value?.moveTo(offset.x, offset.y)
@@ -43,14 +44,14 @@ class DrawingCanvasViewModel: ViewModel() {
         currentPath.value.let { value ->
             if (value != null) {
                 paths.add(value)
-                pathsPerPage[currentPage.intValue] = (pathsPerPage[currentPage.intValue] ?: emptyList()) + value
+                val drawnPath = DrawnPath(value, PathStyle(currentColor, currentWidth))
+                pathsPerPage[currentPage.intValue] = (pathsPerPage[currentPage.intValue] ?: emptyList()) + drawnPath
                 currentPage.intValue = -1
             }
         }
     }
 
     fun onDragStart(offset: Offset, page: Int, pageWidth: Float) {
-        val p = Offset(offset.x / pageWidth, offset.y / pageWidth)
         canvasWidth = pageWidth
         currentPage.intValue = page
         currentPath.value = Path()
@@ -60,9 +61,6 @@ class DrawingCanvasViewModel: ViewModel() {
     }
 
     fun onDrag(offset: Offset, pageWidth: Float) {
-        // TODO
-        val p = Offset(offset.x / pageWidth, offset.y / pageWidth)
-
         if (lastOffset.value != null) {
             val newOffset = Offset(
                 lastOffset.value!!.x + offset.x,
@@ -80,7 +78,8 @@ class DrawingCanvasViewModel: ViewModel() {
                 paths.add(value)
                 currentPath.value = null
                 currentPathRef.intValue = 0
-                pathsPerPage[currentPage.intValue] = (pathsPerPage[currentPage.intValue] ?: emptyList()) + value
+                val drawnPath = DrawnPath(value, PathStyle(currentColor, currentWidth))
+                pathsPerPage[currentPage.intValue] = (pathsPerPage[currentPage.intValue] ?: emptyList()) + drawnPath
             }
         }
     }
@@ -103,13 +102,13 @@ class DrawingCanvasViewModel: ViewModel() {
      *
      * @param savedPaths List of paths.
      */
-    fun redraw(savedPaths: Map<Int, List<Path>>?) {
+    fun redraw(savedPaths: Map<Int, List<DrawnPath>>?) {
         clear()
         savedPaths?.forEach { (page, paths) -> pathsPerPage[page] = paths }
     }
 }
 
 data class DrawnPath(
-    val path: Path,
-    val style: PathStyle
+    var path: Path,
+    var style: PathStyle
 )
