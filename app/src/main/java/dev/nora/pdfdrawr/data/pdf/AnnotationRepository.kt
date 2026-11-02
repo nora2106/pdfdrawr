@@ -16,9 +16,6 @@ import tools.jackson.module.kotlin.jacksonObjectMapper
 import java.io.File
 import java.io.IOException
 
-/**
- * Take size in bytes and return appropriate conversion depending on size
- */
 class AnnotationRepository(private val context: Context) {
     val mapper = jacksonObjectMapper()
 
