@@ -8,23 +8,15 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.RemoveRedEye
-import androidx.compose.material3.Button
-import androidx.compose.material3.FilledIconToggleButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,16 +32,14 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import dev.nora.pdfdrawr.data.pdf.AnnotationRepository
 import dev.nora.pdfdrawr.viewmodel.PdfViewModel
-import kotlinx.coroutines.launch
 
 // TODO currently only works on vertical screens
 @Composable
 fun PdfView(pdfFile: File) {
-    val scope = rememberCoroutineScope()
     val appContext = LocalContext.current.applicationContext
-    var drawingEnabled by remember { mutableStateOf(true) }
-
+    val toolState = ToolState()
     val vm: DrawingCanvasViewModel = viewModel()
+    vm.toolState = toolState
     val pdfVm: PdfViewModel = viewModel(factory = viewModelFactory {
         initializer { PdfViewModel(AnnotationRepository(appContext), vm) }
     })
@@ -57,41 +47,24 @@ fun PdfView(pdfFile: File) {
     LaunchedEffect(pdfFile) {
         pdfVm.openFile(pdfFile)
     }
+
     Column() {
-        Row() {
-            Button(
-                onClick = {
-                    scope.launch { pdfVm.saveData() } }
-            ) {
-                Text("Save")
-            }
-            Button(
-                onClick = {
-                    scope.launch { pdfVm.uploadAsPdf() } }
-            ) {
-                Text("Upload")
-            }
-            FilledIconToggleButton(checked = true, enabled = true, onCheckedChange = {
-                drawingEnabled = !drawingEnabled
-
-            }, content = {Icon(Icons.Rounded.RemoveRedEye, contentDescription = "Toggle View/Draw")})
-        }
-
-        PageColumn(vm, pdfVm, drawingEnabled)
+        DrawingToolbar(toolState, { pdfVm.saveData() }, { pdfVm.uploadAsPdf() } )
+        PageColumn(vm, pdfVm, toolState)
     }
 }
 
 @Composable
-fun PageColumn(vm: DrawingCanvasViewModel, pdfVm: PdfViewModel, drawingEnabled: Boolean) {
+fun PageColumn(vm: DrawingCanvasViewModel, pdfVm: PdfViewModel, toolState: ToolState) {
     LazyColumn(
-        userScrollEnabled = !drawingEnabled
+        userScrollEnabled = !toolState.drawingEnabled
     ) {
-        items(count = pdfVm.getPageCount()) { index -> PdfPage(vm, pdfVm, index, drawingEnabled) }
+        items(count = pdfVm.getPageCount()) { index -> PdfPage(vm, pdfVm, index, toolState) }
     }
 }
 
 @Composable
-fun PdfPage(vm: DrawingCanvasViewModel, pdfVm: PdfViewModel, index: Int, drawingEnabled: Boolean) {
+fun PdfPage(vm: DrawingCanvasViewModel, pdfVm: PdfViewModel, index: Int, toolState: ToolState) {
     val file = pdfVm.currentFile
     var bitmap by remember(file) { mutableStateOf<Bitmap?>(null) }
 
@@ -102,6 +75,7 @@ fun PdfPage(vm: DrawingCanvasViewModel, pdfVm: PdfViewModel, index: Int, drawing
     // TODO add white background (transparent pdfs and placeholder)
     Box( Modifier
         .fillMaxWidth()
+        //.background(Color.White)
         .aspectRatio(pdfVm.ratio(index))
     ) {
         bitmap?.let {
@@ -114,21 +88,21 @@ fun PdfPage(vm: DrawingCanvasViewModel, pdfVm: PdfViewModel, index: Int, drawing
                 contentScale = ContentScale.Fit
             )
         }
-        DrawingCanvas(vm, index, drawingEnabled)
+        DrawingCanvas(vm, index, toolState)
     }
 }
 
 @Composable
-fun DrawingCanvas(vm: DrawingCanvasViewModel, index: Int, drawingEnabled: Boolean) {
+fun DrawingCanvas(vm: DrawingCanvasViewModel, index: Int, ts: ToolState) {
     Canvas(
         modifier = Modifier.fillMaxSize()
             .background(Color.White.copy(alpha = 0.2f))
-            .pointerInput(index, drawingEnabled) {
-                if(!drawingEnabled) return@pointerInput
+            .pointerInput(index, ts.drawingEnabled) {
+                if(!ts.drawingEnabled) return@pointerInput
                 detectTapGestures { vm.onTapGesture(it, index, size.width.toFloat()) }
             }
-            .pointerInput(index, drawingEnabled) {
-                if(!drawingEnabled) return@pointerInput
+            .pointerInput(index, ts.drawingEnabled) {
+                if(!ts.drawingEnabled) return@pointerInput
                 detectDragGestures(
                     onDragStart = { vm.onDragStart(it, index, size.width.toFloat()) },
                     onDragEnd = { vm.onDragEnd() },
@@ -144,4 +118,3 @@ fun DrawingCanvas(vm: DrawingCanvasViewModel, index: Int, drawingEnabled: Boolea
         }
     }
 }
-

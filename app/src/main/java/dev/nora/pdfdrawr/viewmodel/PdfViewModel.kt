@@ -60,8 +60,8 @@ class PdfViewModel(private val annotationRep: AnnotationRepository, private val 
     /**
      * Save canvas data as a list of serializable path objects.
      */
-    suspend fun saveData() = withContext(Dispatchers.IO){
-        if(currentFile == null) return@withContext
+    fun saveData() = viewModelScope.launch{
+        if(currentFile == null) return@launch
 
         val savedPaths = canvasVm.pathsPerPage.flatMap { (page, paths) ->
             paths.map { pathData -> SaveablePath(pathData.path.fillType.toString(), annotationRep.extractPathOps(pathData.path), page, pathData.style) }
@@ -94,8 +94,8 @@ class PdfViewModel(private val annotationRep: AnnotationRepository, private val 
     /**
      * Save current file as PDF and upload to server.
      */
-    suspend fun uploadAsPdf() = withContext(Dispatchers.IO) {
-        if(currentFile == null) return@withContext
+    fun uploadAsPdf() = viewModelScope.launch {
+        if(currentFile == null) return@launch
         val newFile = annotationRep.exportPdfWithAnnotations(currentFile!!, canvasVm.pathsPerPage, canvasVm.canvasWidth)
         // TODO add path
         WebDavRepository.uploadFile(newFile, "")

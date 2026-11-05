@@ -1,14 +1,16 @@
 package dev.nora.pdfdrawr.viewmodel
 
-import android.graphics.Color
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.toColorLong
 import androidx.lifecycle.ViewModel
 import dev.nora.pdfdrawr.data.pdf.PathStyle
+import dev.nora.pdfdrawr.ui.fileview.ToolState
 
 // TODO refactor into normal class to avoid multiple view models per view
 class DrawingCanvasViewModel: ViewModel() {
@@ -18,9 +20,10 @@ class DrawingCanvasViewModel: ViewModel() {
     val currentPage = mutableIntStateOf(-1)
     val currentPath = mutableStateOf<Path?>(null)
     val currentPathRef = mutableIntStateOf(1)
-    var currentColor: Long = Color.BLACK.toLong()
+    var currentColor: Long = android.graphics.Color.BLACK.toLong()
     var currentWidth = 10f
     private val lastOffset = mutableStateOf<Offset?>(null)
+    var toolState: ToolState? = null
 
     /**
      * Draw single tap.
