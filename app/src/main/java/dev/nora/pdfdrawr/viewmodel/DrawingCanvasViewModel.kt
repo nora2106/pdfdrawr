@@ -21,7 +21,6 @@ class DrawingCanvasViewModel: ViewModel() {
     val currentPage = mutableIntStateOf(-1)
     val currentPath = mutableStateOf<Path?>(null)
     val currentPathRef = mutableIntStateOf(1)
-    var currentColor: Long = Color.Black.toArgb().toLong()
     var currentWidth = 10f
     private val lastOffset = mutableStateOf<Offset?>(null)
     var toolState: ToolState? = null
@@ -32,7 +31,7 @@ class DrawingCanvasViewModel: ViewModel() {
      * @param offset Offset
      * @param pageIndex Index of current page
      */
-    fun onTapGesture(offset: Offset, pageIndex: Int, pageWidth: Float) {
+    fun onTapGesture(offset: Offset, pageIndex: Int) {
         currentPath.value = Path()
         currentPage.intValue = pageIndex
         currentPath.value?.moveTo(offset.x, offset.y)
@@ -48,8 +47,7 @@ class DrawingCanvasViewModel: ViewModel() {
         currentPath.value.let { value ->
             if (value != null) {
                 paths.add(value)
-                currentColor = toolState!!.color.toArgb().toLong()
-                val drawnPath = DrawnPath(value, PathStyle(currentColor, currentWidth))
+                val drawnPath = DrawnPath(value, PathStyle(toolState!!.color.toArgb().toLong(), toolState!!.strokeWidth))
                 pathsPerPage[currentPage.intValue] = (pathsPerPage[currentPage.intValue] ?: emptyList()) + drawnPath
                 currentPage.intValue = -1
             }
@@ -65,7 +63,7 @@ class DrawingCanvasViewModel: ViewModel() {
         lastOffset.value = offset
     }
 
-    fun onDrag(offset: Offset, pageWidth: Float) {
+    fun onDrag(offset: Offset) {
         if (lastOffset.value != null) {
             val newOffset = Offset(
                 lastOffset.value!!.x + offset.x,
@@ -83,8 +81,7 @@ class DrawingCanvasViewModel: ViewModel() {
                 paths.add(value)
                 currentPath.value = null
                 currentPathRef.intValue = 0
-                currentColor = toolState!!.color.toArgb().toLong()
-                val drawnPath = DrawnPath(value, PathStyle(currentColor, currentWidth))
+                val drawnPath = DrawnPath(value, PathStyle(toolState!!.color.toArgb().toLong(), toolState!!.strokeWidth))
                 pathsPerPage[currentPage.intValue] = (pathsPerPage[currentPage.intValue] ?: emptyList()) + drawnPath
             }
         }

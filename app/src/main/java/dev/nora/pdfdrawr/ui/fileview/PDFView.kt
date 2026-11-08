@@ -99,7 +99,7 @@ fun DrawingCanvas(vm: DrawingCanvasViewModel, index: Int, ts: ToolState) {
             .background(Color.White.copy(alpha = 0.2f))
             .pointerInput(index, ts.drawingEnabled) {
                 if(!ts.drawingEnabled) return@pointerInput
-                detectTapGestures { vm.onTapGesture(it, index, size.width.toFloat()) }
+                detectTapGestures { vm.onTapGesture(it, index) }
             }
             .pointerInput(index, ts.drawingEnabled) {
                 if(!ts.drawingEnabled) return@pointerInput
@@ -107,14 +107,14 @@ fun DrawingCanvas(vm: DrawingCanvasViewModel, index: Int, ts: ToolState) {
                     onDragStart = { vm.onDragStart(it, index, size.width.toFloat()) },
                     onDragEnd = { vm.onDragEnd() },
                     onDragCancel = { vm.onDragCancel() },
-                    onDrag = { _, amount -> vm.onDrag(amount, size.width.toFloat()) }
+                    onDrag = { _, amount -> vm.onDrag(amount) }
                 )
             }
     ) {
         vm.pathsPerPage[index]?.forEach { drawPath(path = it.path, color = it.style.composeColor, style = Stroke(it.style.strokeWidth)) }
 
         if (vm.currentPath.value != null && vm.currentPathRef.intValue > 0 && vm.currentPage.intValue == index) {
-            drawPath(path = vm.currentPath.value!!, color = ts.color, style = Stroke(vm.currentWidth))
+            drawPath(path = vm.currentPath.value!!, color = ts.color, style = Stroke(ts.strokeWidth))
         }
     }
 }
