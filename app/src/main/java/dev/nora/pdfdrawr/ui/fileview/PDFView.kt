@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -56,26 +57,27 @@ fun PdfView(pdfFile: File) {
 
 @Composable
 fun PageColumn(vm: DrawingCanvasViewModel, pdfVm: PdfViewModel, toolState: ToolState) {
-    LazyColumn(
-        userScrollEnabled = !toolState.drawingEnabled
-    ) {
-        items(count = pdfVm.getPageCount()) { index -> PdfPage(vm, pdfVm, index, toolState) }
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val width = constraints.maxWidth
+        LazyColumn(
+            userScrollEnabled = !toolState.drawingEnabled
+        ) {
+            items(count = pdfVm.getPageCount()) { index -> PdfPage(vm, pdfVm, index, toolState, width) }
+        }
     }
 }
 
 @Composable
-fun PdfPage(vm: DrawingCanvasViewModel, pdfVm: PdfViewModel, index: Int, toolState: ToolState) {
+fun PdfPage(vm: DrawingCanvasViewModel, pdfVm: PdfViewModel, index: Int, toolState: ToolState, pageWidth: Int) {
     val file = pdfVm.currentFile
     var bitmap by remember(file) { mutableStateOf<Bitmap?>(null) }
 
     LaunchedEffect(index) {
-        bitmap = pdfVm.renderPage(index)
+        bitmap = pdfVm.renderPage(index, pageWidth)
     }
 
-    // TODO add white background (transparent pdfs and placeholder)
     Box( Modifier
         .fillMaxWidth()
-        //.background(Color.White)
         .aspectRatio(pdfVm.ratio(index))
     ) {
         bitmap?.let {
@@ -95,14 +97,15 @@ fun PdfPage(vm: DrawingCanvasViewModel, pdfVm: PdfViewModel, index: Int, toolSta
 @Composable
 fun DrawingCanvas(vm: DrawingCanvasViewModel, index: Int, ts: ToolState) {
     Canvas(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
             .background(Color.White.copy(alpha = 0.2f))
             .pointerInput(index, ts.drawingEnabled) {
-                if(!ts.drawingEnabled) return@pointerInput
+                if (!ts.drawingEnabled) return@pointerInput
                 detectTapGestures { vm.onTapGesture(it, index) }
             }
             .pointerInput(index, ts.drawingEnabled) {
-                if(!ts.drawingEnabled) return@pointerInput
+                if (!ts.drawingEnabled) return@pointerInput
                 detectDragGestures(
                     onDragStart = { vm.onDragStart(it, index, size.width.toFloat()) },
                     onDragEnd = { vm.onDragEnd() },

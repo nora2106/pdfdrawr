@@ -23,9 +23,13 @@ class PDFViewer(private val renderer: PdfRenderer) {
      * @param pageIndex Index of the page
      * @return Bitmap of the page
      */
-    suspend fun renderSinglePage(pageIndex: Int): Bitmap = withContext(Dispatchers.IO) {
+    suspend fun renderSinglePage(pageIndex: Int, targetWidth: Int): Bitmap = withContext(Dispatchers.IO) {
         val page = renderer.openPage(pageIndex)
-        val bitmap = createBitmap(page.width, page.height)
+        val scale = targetWidth.toFloat() / page.width
+        val height = (page.height * scale).toInt()
+
+        val bitmap = createBitmap(targetWidth, height)
+        bitmap.eraseColor(android.graphics.Color.WHITE)
 
         page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
 

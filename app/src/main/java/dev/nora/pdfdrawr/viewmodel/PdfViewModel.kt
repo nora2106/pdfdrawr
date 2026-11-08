@@ -41,9 +41,6 @@ class PdfViewModel(private val annotationRep: AnnotationRepository, private val 
             PDFViewer(PdfRenderer(ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)))
         }
 
-        /*val input = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
-        val renderer = PdfRenderer(input)
-        renderer.let { viewer = PDFViewer(it) }*/
         currentFile = file
         viewer = newViewer
     }
@@ -53,7 +50,7 @@ class PdfViewModel(private val annotationRep: AnnotationRepository, private val 
         viewer?.close()
     }
 
-    suspend fun renderPage(index: Int): Bitmap? = viewer?.renderSinglePage(index)
+    suspend fun renderPage(index: Int, pageWidth: Int): Bitmap? = viewer?.renderSinglePage(index, pageWidth)
     fun ratio(index: Int): Float = viewer?.ratio(index) ?: 1f
     fun getPageCount() = viewer?.getPageCount() ?: 0
 
