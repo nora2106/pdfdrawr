@@ -7,6 +7,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.toColorLong
 import androidx.lifecycle.ViewModel
 import dev.nora.pdfdrawr.data.pdf.PathStyle
@@ -20,7 +21,7 @@ class DrawingCanvasViewModel: ViewModel() {
     val currentPage = mutableIntStateOf(-1)
     val currentPath = mutableStateOf<Path?>(null)
     val currentPathRef = mutableIntStateOf(1)
-    var currentColor: Long = android.graphics.Color.BLACK.toLong()
+    var currentColor: Long = Color.Black.toArgb().toLong()
     var currentWidth = 10f
     private val lastOffset = mutableStateOf<Offset?>(null)
     var toolState: ToolState? = null
@@ -47,6 +48,7 @@ class DrawingCanvasViewModel: ViewModel() {
         currentPath.value.let { value ->
             if (value != null) {
                 paths.add(value)
+                currentColor = toolState!!.color.toArgb().toLong()
                 val drawnPath = DrawnPath(value, PathStyle(currentColor, currentWidth))
                 pathsPerPage[currentPage.intValue] = (pathsPerPage[currentPage.intValue] ?: emptyList()) + drawnPath
                 currentPage.intValue = -1
@@ -81,6 +83,7 @@ class DrawingCanvasViewModel: ViewModel() {
                 paths.add(value)
                 currentPath.value = null
                 currentPathRef.intValue = 0
+                currentColor = toolState!!.color.toArgb().toLong()
                 val drawnPath = DrawnPath(value, PathStyle(currentColor, currentWidth))
                 pathsPerPage[currentPage.intValue] = (pathsPerPage[currentPage.intValue] ?: emptyList()) + drawnPath
             }
