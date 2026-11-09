@@ -10,4 +10,9 @@ class ToolState {
     var drawingEnabled by mutableStateOf(true)
     var color by mutableStateOf(Color.Black)
     var strokeWidth by mutableFloatStateOf(10f)
+    var selectedTool by mutableStateOf(Tool.PEN)
+}
+
+enum class Tool {
+    PEN, ERASER, MARKER
 }

@@ -6,25 +6,29 @@ import android.os.ParcelFileDescriptor
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.graphics.Path
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.nora.pdfdrawr.data.pdf.AnnotationRepository
+import dev.nora.pdfdrawr.data.pdf.DrawingCanvasState
+import dev.nora.pdfdrawr.data.pdf.DrawnPath
 import dev.nora.pdfdrawr.data.pdf.PDFViewer
-import dev.nora.pdfdrawr.data.pdf.PathStyle
 import dev.nora.pdfdrawr.data.pdf.SaveablePath
 import dev.nora.pdfdrawr.data.sync.WebDavRepository
+import dev.nora.pdfdrawr.ui.fileview.ToolState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.io.File
 
-class PdfViewModel(private val annotationRep: AnnotationRepository, private val canvasVm: DrawingCanvasViewModel) : ViewModel() {
+class PdfViewModel(private val annotationRep: AnnotationRepository) : ViewModel() {
     var viewer by mutableStateOf<PDFViewer?>(null)
         private set
     var currentFile by mutableStateOf<File?>(null)
         private set
+
+    val toolState: ToolState = ToolState()
+    val canvas: DrawingCanvasState = DrawingCanvasState(toolState)
 
     fun openFile(file: File) = viewModelScope.launch {
         if (file == currentFile) return@launch
@@ -32,10 +36,10 @@ class PdfViewModel(private val annotationRep: AnnotationRepository, private val 
         // save and close current file
         viewer = null
         closeCurrentFile()
-        canvasVm.clear()
+        canvas.clear()
 
         val saveData = loadSaveData(file)
-        if(saveData != null) canvasVm.redraw(saveData)
+        if(saveData != null) canvas.redraw(saveData)
 
         val newViewer = withContext(Dispatchers.IO) {
             PDFViewer(PdfRenderer(ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)))
@@ -60,7 +64,7 @@ class PdfViewModel(private val annotationRep: AnnotationRepository, private val 
     fun saveData() = viewModelScope.launch{
         if(currentFile == null) return@launch
 
-        val savedPaths = canvasVm.pathsPerPage.flatMap { (page, paths) ->
+        val savedPaths = canvas.pathsPerPage.flatMap { (page, paths) ->
             paths.map { pathData -> SaveablePath(pathData.path.fillType.toString(), annotationRep.extractPathOps(pathData.path), page, pathData.style) }
         }
 
@@ -79,10 +83,12 @@ class PdfViewModel(private val annotationRep: AnnotationRepository, private val 
         // deserialize paths into Path objects
         val restoredPathsPerPage = mutableMapOf<Int, List<DrawnPath>>()
         savedPaths.groupBy { it.page }.forEach { (page, list) ->
-            restoredPathsPerPage[page] = list.map { saveable -> DrawnPath(
-                path = saveable.toPath(),
-                style = saveable.style
-            ) }
+            restoredPathsPerPage[page] = list.map { saveable ->
+                DrawnPath(
+                    path = saveable.toPath(),
+                    style = saveable.style
+                )
+            }
         }
 
         return@withContext restoredPathsPerPage
@@ -93,7 +99,7 @@ class PdfViewModel(private val annotationRep: AnnotationRepository, private val 
      */
     fun uploadAsPdf() = viewModelScope.launch {
         if(currentFile == null) return@launch
-        val newFile = annotationRep.exportPdfWithAnnotations(currentFile!!, canvasVm.pathsPerPage, canvasVm.canvasWidth)
+        val newFile = annotationRep.exportPdfWithAnnotations(currentFile!!, canvas.pathsPerPage, canvas.canvasWidth)
         // TODO add path
         WebDavRepository.uploadFile(newFile, "")
     }

@@ -26,23 +26,19 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import dev.nora.pdfdrawr.viewmodel.DrawingCanvasViewModel
 import java.io.File
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import dev.nora.pdfdrawr.data.pdf.AnnotationRepository
+import dev.nora.pdfdrawr.data.pdf.DrawingCanvasState
 import dev.nora.pdfdrawr.viewmodel.PdfViewModel
 
-// TODO currently only works on vertical screens
 @Composable
 fun PdfView(pdfFile: File) {
     val appContext = LocalContext.current.applicationContext
-    val toolState = ToolState()
-    val vm: DrawingCanvasViewModel = viewModel()
-    vm.toolState = toolState
     val pdfVm: PdfViewModel = viewModel(factory = viewModelFactory {
-        initializer { PdfViewModel(AnnotationRepository(appContext), vm) }
+        initializer { PdfViewModel(AnnotationRepository(appContext)) }
     })
 
     LaunchedEffect(pdfFile) {
@@ -50,25 +46,25 @@ fun PdfView(pdfFile: File) {
     }
 
     Column() {
-        DrawingToolbar(toolState, { pdfVm.saveData() }, { pdfVm.uploadAsPdf() } )
-        PageColumn(vm, pdfVm, toolState)
+        DrawingToolbar(pdfVm.toolState, { pdfVm.saveData() }, { pdfVm.uploadAsPdf() } )
+        PageColumn(pdfVm)
     }
 }
 
 @Composable
-fun PageColumn(vm: DrawingCanvasViewModel, pdfVm: PdfViewModel, toolState: ToolState) {
+fun PageColumn(pdfVm: PdfViewModel) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val width = constraints.maxWidth
         LazyColumn(
-            userScrollEnabled = !toolState.drawingEnabled
+            userScrollEnabled = !pdfVm.toolState.drawingEnabled
         ) {
-            items(count = pdfVm.getPageCount()) { index -> PdfPage(vm, pdfVm, index, toolState, width) }
+            items(count = pdfVm.getPageCount()) { index -> PdfPage(pdfVm, index, width) }
         }
     }
 }
 
 @Composable
-fun PdfPage(vm: DrawingCanvasViewModel, pdfVm: PdfViewModel, index: Int, toolState: ToolState, pageWidth: Int) {
+fun PdfPage(pdfVm: PdfViewModel, index: Int, pageWidth: Int) {
     val file = pdfVm.currentFile
     var bitmap by remember(file) { mutableStateOf<Bitmap?>(null) }
 
@@ -90,34 +86,36 @@ fun PdfPage(vm: DrawingCanvasViewModel, pdfVm: PdfViewModel, index: Int, toolSta
                 contentScale = ContentScale.Fit
             )
         }
-        DrawingCanvas(vm, index, toolState)
+        DrawingCanvas(pdfVm, index)
     }
 }
 
 @Composable
-fun DrawingCanvas(vm: DrawingCanvasViewModel, index: Int, ts: ToolState) {
+fun DrawingCanvas(pdfVm: PdfViewModel, index: Int) {
+    val ts: ToolState = pdfVm.toolState
+    val cv: DrawingCanvasState = pdfVm.canvas
     Canvas(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White.copy(alpha = 0.2f))
             .pointerInput(index, ts.drawingEnabled) {
                 if (!ts.drawingEnabled) return@pointerInput
-                detectTapGestures { vm.onTapGesture(it, index) }
+                detectTapGestures { cv.onTapGesture(it, index) }
             }
             .pointerInput(index, ts.drawingEnabled) {
                 if (!ts.drawingEnabled) return@pointerInput
                 detectDragGestures(
-                    onDragStart = { vm.onDragStart(it, index, size.width.toFloat()) },
-                    onDragEnd = { vm.onDragEnd() },
-                    onDragCancel = { vm.onDragCancel() },
-                    onDrag = { _, amount -> vm.onDrag(amount) }
+                    onDragStart = { cv.onDragStart(it, index, size.width.toFloat()) },
+                    onDragEnd = { cv.onDragEnd() },
+                    onDragCancel = { cv.onDragCancel() },
+                    onDrag = { _, amount -> cv.onDrag(amount) }
                 )
             }
     ) {
-        vm.pathsPerPage[index]?.forEach { drawPath(path = it.path, color = it.style.composeColor, style = Stroke(it.style.strokeWidth)) }
+        cv.pathsPerPage[index]?.forEach { drawPath(path = it.path, color = it.style.composeColor, style = Stroke(it.style.strokeWidth)) }
 
-        if (vm.currentPath.value != null && vm.currentPathRef.intValue > 0 && vm.currentPage.intValue == index) {
-            drawPath(path = vm.currentPath.value!!, color = ts.color, style = Stroke(ts.strokeWidth))
+        if (cv.currentPath.value != null && cv.currentPathRef.intValue > 0 && cv.currentPage.intValue == index) {
+            drawPath(path = cv.currentPath.value!!, color = ts.color, style = Stroke(ts.strokeWidth))
         }
     }
 }
