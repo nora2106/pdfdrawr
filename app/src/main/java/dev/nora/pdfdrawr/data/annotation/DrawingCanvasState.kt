@@ -1,4 +1,4 @@
-package dev.nora.pdfdrawr.data.pdf
+package dev.nora.pdfdrawr.data.annotation
 
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -7,10 +7,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.toArgb
-import dev.nora.pdfdrawr.ui.fileview.ToolState
 
 class DrawingCanvasState(private var toolState: ToolState) {
     val paths = mutableStateListOf<Path>()
+    val deletedPaths = mutableStateListOf<Path>()
     val pathsPerPage = mutableMapOf<Int, List<DrawnPath>>()
     var canvasWidth = 0f
     val currentPage = mutableIntStateOf(-1)
@@ -40,7 +40,9 @@ class DrawingCanvasState(private var toolState: ToolState) {
         currentPath.value.let { value ->
             if (value != null) {
                 paths.add(value)
-                val drawnPath = DrawnPath(value, PathStyle(toolState!!.color.toArgb().toLong(), toolState!!.strokeWidth))
+                val drawnPath = DrawnPath(value,
+                    PathStyle(toolState.color.toArgb().toLong(), toolState.strokeWidth)
+                )
                 pathsPerPage[currentPage.intValue] = (pathsPerPage[currentPage.intValue] ?: emptyList()) + drawnPath
                 currentPage.intValue = -1
             }
@@ -74,7 +76,9 @@ class DrawingCanvasState(private var toolState: ToolState) {
                 paths.add(value)
                 currentPath.value = null
                 currentPathRef.intValue = 0
-                val drawnPath = DrawnPath(value, PathStyle(toolState!!.color.toArgb().toLong(), toolState!!.strokeWidth))
+                val drawnPath = DrawnPath(value,
+                    PathStyle(toolState.color.toArgb().toLong(), toolState.strokeWidth)
+                )
                 pathsPerPage[currentPage.intValue] = (pathsPerPage[currentPage.intValue] ?: emptyList()) + drawnPath
             }
         }
@@ -101,6 +105,15 @@ class DrawingCanvasState(private var toolState: ToolState) {
     fun redraw(savedPaths: Map<Int, List<DrawnPath>>?) {
         clear()
         savedPaths?.forEach { (page, paths) -> pathsPerPage[page] = paths }
+    }
+
+    fun undo() {
+        //deletedPaths.add(pathsPerPage[currentPage.intValue].removeLast())
+        pathsPerPage[currentPage.intValue]?.dropLast(1)
+    }
+
+    fun redo() {
+
     }
 }
 

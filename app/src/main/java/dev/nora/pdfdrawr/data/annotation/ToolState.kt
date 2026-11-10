@@ -1,4 +1,4 @@
-package dev.nora.pdfdrawr.ui.fileview
+package dev.nora.pdfdrawr.data.annotation
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -12,6 +12,13 @@ class ToolState {
     var strokeWidth by mutableFloatStateOf(10f)
     var selectedTool by mutableStateOf(Tool.PEN)
 }
+
+class ToolbarActions(
+    val onSave: () -> Unit,
+    val onUpload: () -> Unit,
+    val onUndo: () -> Unit,
+    val onRedo: () -> Unit,
+)
 
 enum class Tool {
     PEN, ERASER, MARKER

@@ -10,27 +10,39 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import dev.nora.pdfdrawr.data.annotation.ToolState
+import dev.nora.pdfdrawr.data.annotation.ToolbarActions
 
 @Composable
-fun DrawingToolbar(toolState: ToolState, saveData: () -> Unit, upload: () -> Unit) {
+fun DrawingToolbar(toolState: ToolState, actions: ToolbarActions) {
     Column() {
-        ButtonRow(toolState, saveData, upload)
+        ButtonRow(toolState, actions)
         ColorSelector(toolState)
     }
 }
 
 @Composable
-fun ButtonRow(toolState: ToolState, saveData: () -> Unit, upload: () -> Unit) {
+fun ButtonRow(toolState: ToolState, actions: ToolbarActions) {
     Row() {
+//        Button(
+//            onClick = { saveData() }
+//        ) {
+//            Text("Save")
+//        }
         Button(
-            onClick = { saveData() }
-        ) {
-            Text("Save")
-        }
-        Button(
-            onClick = { upload() }
+            onClick = { actions.onUpload }
         ) {
             Text("Upload")
+        }
+        Button(
+            onClick = { actions.onUndo() }
+        ) {
+            Text("Undo")
+        }
+        Button(
+            onClick = { actions.onRedo() }
+        ) {
+            Text("Redo")
         }
         FilledIconToggleButton(checked = toolState.drawingEnabled, enabled = true, onCheckedChange = { toolState.drawingEnabled = !toolState.drawingEnabled },
             content = { Icon(Icons.Rounded.RemoveRedEye, contentDescription = "Toggle View/Draw") })
@@ -40,15 +52,15 @@ fun ButtonRow(toolState: ToolState, saveData: () -> Unit, upload: () -> Unit) {
 @Composable
 fun ColorSelector(toolState: ToolState) {
     Row() {
-        Button(
-            onClick = { toolState.color = Color.Black }
-        ) {
-            Text("Black")
-        }
-        Button(
-            onClick = { toolState.color = Color.Red }
-        ) {
-            Text("Red")
-        }
+//        Button(
+//            onClick = { toolState.color = Color.Black }
+//        ) {
+//            Text("Black")
+//        }
+//        Button(
+//            onClick = { toolState.color = Color.Red }
+//        ) {
+//            Text("Red")
+//        }
     }
 }

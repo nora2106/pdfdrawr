@@ -1,4 +1,4 @@
-package dev.nora.pdfdrawr.data.pdf
+package dev.nora.pdfdrawr.data.annotation
 
 import android.content.Context
 import android.util.Log

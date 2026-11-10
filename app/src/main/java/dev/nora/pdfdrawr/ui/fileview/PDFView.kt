@@ -30,8 +30,10 @@ import java.io.File
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import dev.nora.pdfdrawr.data.pdf.AnnotationRepository
-import dev.nora.pdfdrawr.data.pdf.DrawingCanvasState
+import dev.nora.pdfdrawr.data.annotation.ToolState
+import dev.nora.pdfdrawr.data.annotation.AnnotationRepository
+import dev.nora.pdfdrawr.data.annotation.DrawingCanvasState
+import dev.nora.pdfdrawr.data.annotation.ToolbarActions
 import dev.nora.pdfdrawr.viewmodel.PdfViewModel
 
 @Composable
@@ -40,13 +42,21 @@ fun PdfView(pdfFile: File) {
     val pdfVm: PdfViewModel = viewModel(factory = viewModelFactory {
         initializer { PdfViewModel(AnnotationRepository(appContext)) }
     })
+    val actions = remember(pdfVm) {
+        ToolbarActions(
+            onSave = pdfVm::saveData,
+            onUpload = pdfVm::uploadAsPdf,
+            onUndo = pdfVm::undoStroke,
+            onRedo = pdfVm::redoStroke,
+        )
+    }
 
     LaunchedEffect(pdfFile) {
         pdfVm.openFile(pdfFile)
     }
 
     Column() {
-        DrawingToolbar(pdfVm.toolState, { pdfVm.saveData() }, { pdfVm.uploadAsPdf() } )
+        DrawingToolbar(pdfVm.toolState, actions )
         PageColumn(pdfVm)
     }
 }

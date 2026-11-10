@@ -8,13 +8,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dev.nora.pdfdrawr.data.pdf.AnnotationRepository
-import dev.nora.pdfdrawr.data.pdf.DrawingCanvasState
-import dev.nora.pdfdrawr.data.pdf.DrawnPath
+import dev.nora.pdfdrawr.data.annotation.AnnotationRepository
+import dev.nora.pdfdrawr.data.annotation.DrawingCanvasState
+import dev.nora.pdfdrawr.data.annotation.DrawnPath
 import dev.nora.pdfdrawr.data.pdf.PDFViewer
-import dev.nora.pdfdrawr.data.pdf.SaveablePath
+import dev.nora.pdfdrawr.data.annotation.SaveablePath
 import dev.nora.pdfdrawr.data.sync.WebDavRepository
-import dev.nora.pdfdrawr.ui.fileview.ToolState
+import dev.nora.pdfdrawr.data.annotation.ToolState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -109,4 +109,7 @@ class PdfViewModel(private val annotationRep: AnnotationRepository) : ViewModel(
             closeCurrentFile()
         }
     }
+
+    fun undoStroke() = canvas.undo()
+    fun redoStroke() = canvas.redo()
 }
