@@ -1,17 +1,20 @@
 package dev.nora.pdfdrawr.data.annotation
 
+import android.util.Log
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.toArgb
+import java.util.LinkedList
 
 class DrawingCanvasState(private var toolState: ToolState) {
     val paths = mutableStateListOf<Path>()
-    val deletedPaths = mutableStateListOf<Path>()
-    val pathsPerPage = mutableMapOf<Int, List<DrawnPath>>()
+    val redoStack = mutableListOf<Pair<Int, DrawnPath>>()
+    val pathsPerPage = mutableStateMapOf<Int, List<DrawnPath>>()
     var canvasWidth = 0f
     val currentPage = mutableIntStateOf(-1)
     val currentPath = mutableStateOf<Path?>(null)
@@ -107,13 +110,24 @@ class DrawingCanvasState(private var toolState: ToolState) {
         savedPaths?.forEach { (page, paths) -> pathsPerPage[page] = paths }
     }
 
+    /**
+     * Delete most recent drawn path.
+     */
     fun undo() {
-        //deletedPaths.add(pathsPerPage[currentPage.intValue].removeLast())
-        pathsPerPage[currentPage.intValue]?.dropLast(1)
+        val page = currentPage.intValue
+        val list = pathsPerPage[page] ?: return
+
+        val removed = list.lastOrNull() ?: return
+        redoStack.add(page to removed)
+        pathsPerPage[page] = list.dropLast(1)
     }
 
+    /**
+     * Redraw last deleted drawn path.
+     */
     fun redo() {
-
+        val (page, path) = redoStack.removeLastOrNull() ?: return
+        pathsPerPage[page] = (pathsPerPage[page] ?: emptyList()) + path
     }
 }
 
